@@ -7,11 +7,9 @@ import Foundation
 enum StatusItemValue {
     static func current(_ model: AppModel) -> (text: String, unit: String) {
         guard let money = money(model) else {
-            var text = SpeedFormat.speed(model.gauge.readoutValue)
-            if let ttft = model.snapshot.lastResponse?.ttftMs {
-                text += " · TTFT " + formatTTFT(ttft)
-            }
-            return (text, model.l10n("unit.tokS"))
+            let unit = model.l10n("unit.tokS")
+            let ttft = model.snapshot.lastResponse?.ttftMs.map(formatTTFT)
+            return (SpeedFormat.speed(model.gauge.readoutValue), ttft.map { "\(unit)  \($0)" } ?? unit)
         }
         if money.unknown { return ("–", money.unit) }
         let number = model.settings.barShowsUnit ? money.number : money.inline
