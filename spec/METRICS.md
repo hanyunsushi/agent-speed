@@ -206,10 +206,11 @@ false (Codex records only the user's speed setting, not the tier a request was b
   sub-agent messages (output ≈ 8 tokens) and never the final usage; such responses are *unfinalized*.
 - A response is *measured* when it is final and has a valid interval, and *unmeasured* when it is unfinalized and has a
   valid interval. Unmeasured responses never contribute measured speed; their time is estimated instead (6.3).
-- Minimum duration: if `endMs - startMs < 500 ms`, use `startMs' = endMs - 500`.
-- `speed = output / ((endMs - startMs') / 1000)` — this is end-to-end output speed and includes time to first token.
+- Decode interval: use `firstMs` when `startMs ≤ firstMs < endMs`, otherwise use `startMs`; there is no artificial
+  minimum duration when a first-content timestamp is available.
+- `speed = output / ((endMs - decodeStartMs) / 1000)` — this is generation speed after the first token.
 - `firstMs` = when the response's first content was written (Claude 4.1, Codex 4.2), or its first token arrived
-  (Devin 4.17), else null: no other source's log says it. `firstMs − startMs` is the response's first-content latency (6.9 L); it is never part of the interval.
+  (Devin 4.17), else null: no other source's log says it. `firstMs − startMs` is the response's TTFT / first-content latency (6.9 L).
 
 ### 3.4 Deduplication
 A global, bounded (65 536 entries, FIFO eviction) set of response keys shared by all files of all sources.
@@ -2351,7 +2352,7 @@ Today totals are aggregated incrementally.
 
 ### 6.2 Agent recent speed
 For agent `a`: the up to 3 most recent measured responses ending within the last 10 minutes.
-`recentSpeed(a) = Σ output / Σ duration_seconds` (and `recentTotalSpeed(a)` with `input + output`).
+`recentSpeed(a) = Σ output / Σ decode_duration_seconds` (and `recentTotalSpeed(a)` with `input + output`).
 Fallbacks for estimation when the agent has none: the same formula over the up to 10 most recent measured
 responses with the same model within 30 minutes (any agent), else with the same source within 30 minutes, else none.
 Only measured responses are ever used as a speed reference.
@@ -2523,7 +2524,7 @@ Per agent `a` at `nowMs`, evaluated on every engine tick (500 ms) with that tick
 
 | Id | 名稱 | Weight `w` | Measure | Ratio `r` | Present when |
 | --- | --- | ---: | --- | --- | --- |
-| T | 輸出吞吐 output throughput | 0.30 | `Σ output / Σ duration_s` over the sample (3.3 durations, 500 ms minimum) | `T / 50` | always (n ≥ 3) |
+| T | 輸出吞吐 output throughput | 0.30 | `Σ output / Σ decode_duration_s` over the sample (3.3 decode intervals) | `T / 50` | always (n ≥ 3) |
 | L | 首段延遲 first-content latency P50 (ms) | 0.20 | the median of `firstMs − startMs` over the sample responses that have both, with `firstMs ≥ startMs` (an even count: the mean of the two middle values) | `5000 / max(L, 250)` | ≥ 3 values |
 | N | 行動節奏 tool calls per active minute | 0.15 | `|C| / (activeMs / 60 000)` | `N / 3` | `|C| ≥ 3` and `activeMs > 0` |
 | R | 思考速度 reasoning throughput | 0.10 | `Σ min(reasoning, output) / Σ duration_s` over the sample responses with `min(reasoning, output) > 0` | `R / 20` | ≥ 3 such responses |
@@ -2722,7 +2723,7 @@ keeps per local day, source and raw model (the model as logged; the empty string
 
 | Field | Meaning |
 | --- | --- |
-| `n`, `outputSum`, `durationMsSum` | the measured responses (3.3) whose `endMs` falls on the day (local date, as 8), Σ `output`, Σ `endMs − startMs'` |
+| `n`, `outputSum`, `durationMsSum` | the measured responses (3.3) whose `endMs` falls on the day (local date, as 8), Σ `output`, Σ decode duration |
 | `latencyBins` | 64 counts of `firstMs − startMs` over those responses that have both with `firstMs ≥ startMs` (below) |
 | `reasonN`, `reasonOutput`, `reasonDurationMsSum` | those with `min(reasoning, output) > 0` of every source but DeepSeek Harness (6.9 R), Σ `min(reasoning, output)`, Σ durations |
 | `cacheN`, `cacheInput`, `cacheCached` | those with `input > 0` of every source but Hermes Agent (6.9 H), Σ `input`, Σ `cachedInput` |

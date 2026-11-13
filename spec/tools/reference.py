@@ -3353,7 +3353,9 @@ def interval(resp):
     start, end = resp.get("startMs"), resp["endMs"]
     if start is None or end < start or end - start > 15 * 60_000:
         return None
-    return (min(start, end - 500), end)
+    first = resp.get("firstMs")
+    decode_start = first if first is not None and start <= first < end else start
+    return (decode_start, end) if end > decode_start else None
 
 
 def overlap(a0, a1, b0, b1):

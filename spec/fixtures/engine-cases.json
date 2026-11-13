@@ -22,6 +22,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -69,6 +70,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -104,6 +106,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -148,6 +151,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true
@@ -159,6 +163,7 @@
           "model": "m2",
           "startMs": 1000000001000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 100,
           "final": true
@@ -174,7 +179,7 @@
       ]
     },
     {
-      "name": "durations shorter than 500 ms are widened backwards",
+      "name": "decode speed starts at the first token",
       "agents": [
         {
           "id": "a1",
@@ -194,6 +199,7 @@
           "model": "m1",
           "startMs": 1000000001000,
           "endMs": 1000000001100,
+          "firstMs": 1000000001050,
           "input": 0,
           "output": 10,
           "final": true
@@ -208,8 +214,8 @@
         },
         {
           "nowMs": 1000000003700,
-          "liveOutput": 2.6666666666666665,
-          "liveTotal": 2.6666666666666665,
+          "liveOutput": 3.3333333333333335,
+          "liveTotal": 3.3333333333333335,
           "estimatedShare": 0.0
         }
       ]
@@ -235,6 +241,7 @@
           "model": "m1",
           "startMs": null,
           "endMs": 1000000002000,
+          "firstMs": null,
           "input": 0,
           "output": 500,
           "final": true
@@ -246,6 +253,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000960000,
+          "firstMs": null,
           "input": 0,
           "output": 500,
           "final": true
@@ -296,6 +304,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -340,6 +349,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -384,6 +394,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -419,6 +430,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000001000,
+          "firstMs": null,
           "input": 0,
           "output": 100,
           "final": true
@@ -430,6 +442,7 @@
           "model": "m1",
           "startMs": 1000000002000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 50,
           "final": true
@@ -441,6 +454,7 @@
           "model": "m1",
           "startMs": 1000000004000,
           "endMs": 1000000005000,
+          "firstMs": null,
           "input": 0,
           "output": 50,
           "final": true
@@ -452,6 +466,7 @@
           "model": "m1",
           "startMs": 1000000006000,
           "endMs": 1000000007000,
+          "firstMs": null,
           "input": 0,
           "output": 50,
           "final": true
@@ -487,6 +502,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000002000,
+          "firstMs": null,
           "input": 0,
           "output": 100,
           "final": true
@@ -531,6 +547,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true
@@ -542,6 +559,7 @@
           "model": "m1",
           "startMs": 1000000001000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 8,
           "final": false
@@ -640,6 +658,7 @@
           "model": "m2",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true
@@ -651,6 +670,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 150,
           "final": true
@@ -662,6 +682,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 90,
           "final": true
@@ -712,6 +733,7 @@
           "model": "m1",
           "startMs": 999996395000,
           "endMs": 999996399999,
+          "firstMs": null,
           "input": 999,
           "output": 999,
           "final": true
@@ -723,6 +745,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true
@@ -734,6 +757,7 @@
           "model": "m1",
           "startMs": 1000000002000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true
@@ -745,6 +769,7 @@
           "model": "m1",
           "startMs": 1000000005000,
           "endMs": 1000000006000,
+          "firstMs": null,
           "input": 0,
           "output": 8,
           "final": false
@@ -803,6 +828,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000002000,
+          "firstMs": null,
           "input": 0,
           "output": 400,
           "final": true
@@ -814,6 +840,7 @@
           "model": "m2",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true
@@ -880,6 +907,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true,
@@ -934,6 +962,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 10000,
           "output": 200,
           "final": true,
@@ -981,6 +1010,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -993,6 +1023,7 @@
           "model": "m2",
           "startMs": 1000000001000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 100,
           "final": true,
@@ -1031,6 +1062,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -1069,6 +1101,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -1116,6 +1149,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -1128,6 +1162,7 @@
           "model": "m1",
           "startMs": 1000000001000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 8,
           "final": false,
@@ -1167,6 +1202,7 @@
           "model": "m1",
           "startMs": 999996395000,
           "endMs": 999996399999,
+          "firstMs": null,
           "input": 0,
           "output": 999,
           "final": true,
@@ -1179,6 +1215,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000004000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -1191,6 +1228,7 @@
           "model": "m1",
           "startMs": 1000000002000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true,
@@ -1203,6 +1241,7 @@
           "model": "m1",
           "startMs": 1000000005000,
           "endMs": 1000000006000,
+          "firstMs": null,
           "input": 0,
           "output": 8,
           "final": false,
@@ -1253,6 +1292,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000002000,
+          "firstMs": null,
           "input": 0,
           "output": 400,
           "final": true,
@@ -1265,6 +1305,7 @@
           "model": "m2",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true,
@@ -1361,6 +1402,7 @@
           "model": "m1",
           "startMs": 1000000000000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 300,
           "final": true,
@@ -1373,6 +1415,7 @@
           "model": "m2",
           "startMs": 1000000001000,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 100,
           "final": true,
@@ -1385,6 +1428,7 @@
           "model": "m1",
           "startMs": 999999997000,
           "endMs": 999999999000,
+          "firstMs": null,
           "input": 0,
           "output": 200,
           "final": true,
@@ -1397,6 +1441,7 @@
           "model": "m3",
           "startMs": 1000000001500,
           "endMs": 1000000003000,
+          "firstMs": null,
           "input": 0,
           "output": 150,
           "final": true,

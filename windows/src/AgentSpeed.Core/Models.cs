@@ -185,7 +185,7 @@ public sealed record SourceStatus(
 }
 
 /// <param name="Duration">Null when the request start is unknown.</param>
-/// <param name="Speed">Output tok/s, null when the duration is unknown.</param>
+/// <param name="Speed">Decode output tok/s, null when the duration is unknown.</param>
 public sealed record ResponseSummary(
     SourceKind Source,
     string Project,
@@ -194,7 +194,8 @@ public sealed record ResponseSummary(
     long TotalTokens,
     TimeSpan? Duration,
     double? Speed,
-    DateTimeOffset EndedAt)
+    DateTimeOffset EndedAt,
+    long? TtftMs = null)
 {
     /// <summary><c>local</c>, or the remote host the response was read on.</summary>
     public string Host { get; init; } = Remote.RemoteHost.LocalId;

@@ -20,7 +20,7 @@
       "output": 1098,
       "reasoning": 60,
       "measuredOutput": 1090,
-      "measuredMs": 24900,
+      "measuredMs": 18450,
       "unfinalized": 1,
       "costMicroUsd": 73930,
       "unpricedRequests": 0,
@@ -31,7 +31,7 @@
           "requests": 8,
           "output": 1098,
           "measuredOutput": 1090,
-          "measuredMs": 24900,
+          "measuredMs": 18450,
           "costMicroUsd": 73930,
           "unpricedRequests": 0
         }
@@ -48,7 +48,7 @@
       "output": 560,
       "reasoning": 0,
       "measuredOutput": 560,
-      "measuredMs": 7998,
+      "measuredMs": 5998,
       "unfinalized": 0,
       "costMicroUsd": 55030,
       "unpricedRequests": 1,
@@ -67,7 +67,7 @@
           "requests": 1,
           "output": 60,
           "measuredOutput": 60,
-          "measuredMs": 3000,
+          "measuredMs": 1000,
           "costMicroUsd": 0,
           "unpricedRequests": 1
         }
@@ -91,7 +91,7 @@
       "output": 2980,
       "reasoning": 750,
       "measuredOutput": 2980,
-      "measuredMs": 72010,
+      "measuredMs": 36040,
       "unfinalized": 0,
       "costMicroUsd": 99293,
       "unpricedRequests": 0,
@@ -102,7 +102,7 @@
           "requests": 4,
           "output": 1510,
           "measuredOutput": 1510,
-          "measuredMs": 36100,
+          "measuredMs": 20900,
           "costMicroUsd": 50725,
           "unpricedRequests": 0
         },
@@ -110,7 +110,7 @@
           "requests": 8,
           "output": 980,
           "measuredOutput": 980,
-          "measuredMs": 24010,
+          "measuredMs": 11120,
           "costMicroUsd": 45000,
           "unpricedRequests": 0
         },
@@ -118,7 +118,7 @@
           "requests": 4,
           "output": 490,
           "measuredOutput": 490,
-          "measuredMs": 11900,
+          "measuredMs": 4020,
           "costMicroUsd": 3568,
           "unpricedRequests": 0
         }
@@ -267,7 +267,7 @@
       "output": 1910,
       "reasoning": 0,
       "measuredOutput": 1610,
-      "measuredMs": 33900,
+      "measuredMs": 33700,
       "unfinalized": 0,
       "costMicroUsd": 189028,
       "unpricedRequests": 2,
@@ -302,7 +302,7 @@
           "requests": 2,
           "output": 120,
           "measuredOutput": 120,
-          "measuredMs": 8500,
+          "measuredMs": 8300,
           "costMicroUsd": 0,
           "unpricedRequests": 2
         }
@@ -1145,7 +1145,7 @@
       "model": "gpt-5.5",
       "n": 4,
       "outputSum": 1510,
-      "durationMsSum": 36100,
+      "durationMsSum": 20900,
       "latencyBins": [
         0,
         0,
@@ -1214,14 +1214,14 @@
       ],
       "reasonN": 3,
       "reasonOutput": 520,
-      "reasonDurationMsSum": 26200,
+      "reasonDurationMsSum": 20000,
       "cacheN": 4,
       "cacheInput": 64500,
       "cacheCached": 40000,
       "toolN": 1,
       "toolLnSum": 9.22029070282935,
       "toolFailed": 0,
-      "activeMs": 46100
+      "activeMs": 30900
     },
     {
       "day": "2026-10-20",
@@ -1229,7 +1229,7 @@
       "model": "gpt-6.1-sol",
       "n": 8,
       "outputSum": 980,
-      "durationMsSum": 24010,
+      "durationMsSum": 11120,
       "latencyBins": [
         0,
         0,
@@ -1298,14 +1298,14 @@
       ],
       "reasonN": 5,
       "reasonOutput": 160,
-      "reasonDurationMsSum": 18610,
+      "reasonDurationMsSum": 8120,
       "cacheN": 8,
       "cacheInput": 63800,
       "cacheCached": 54600,
       "toolN": 5,
       "toolLnSum": 39.74325000592856,
       "toolFailed": 1,
-      "activeMs": 40390
+      "activeMs": 27500
     },
     {
       "day": "2026-10-20",
@@ -1313,7 +1313,7 @@
       "model": "gpt-6.1-sol-mini",
       "n": 4,
       "outputSum": 490,
-      "durationMsSum": 11900,
+      "durationMsSum": 4020,
       "latencyBins": [
         0,
         0,
@@ -1382,14 +1382,14 @@
       ],
       "reasonN": 2,
       "reasonOutput": 70,
-      "reasonDurationMsSum": 6400,
+      "reasonDurationMsSum": 1020,
       "cacheN": 4,
       "cacheInput": 26600,
       "cacheCached": 24000,
       "toolN": 2,
       "toolLnSum": 14.914122846632385,
       "toolFailed": 0,
-      "activeMs": 15380
+      "activeMs": 7500
     },
     {
       "day": "2026-10-20",
@@ -1397,7 +1397,7 @@
       "model": "claude-opus-5-5",
       "n": 7,
       "outputSum": 1090,
-      "durationMsSum": 24900,
+      "durationMsSum": 18450,
       "latencyBins": [
         0,
         0,
@@ -1466,14 +1466,14 @@
       ],
       "reasonN": 1,
       "reasonOutput": 60,
-      "reasonDurationMsSum": 6000,
+      "reasonDurationMsSum": 2050,
       "cacheN": 7,
       "cacheInput": 63219,
       "cacheCached": 61400,
       "toolN": 4,
       "toolLnSum": 29.017315477048438,
       "toolFailed": 1,
-      "activeMs": 35100
+      "activeMs": 28650
     },
     {
       "day": "2026-10-20",
@@ -1565,7 +1565,7 @@
       "model": "claude-sonnet-5-5",
       "n": 1,
       "outputSum": 60,
-      "durationMsSum": 3000,
+      "durationMsSum": 1000,
       "latencyBins": [
         0,
         0,
@@ -1641,7 +1641,7 @@
       "toolN": 0,
       "toolLnSum": 0.0,
       "toolFailed": 0,
-      "activeMs": 3000
+      "activeMs": 1000
     },
     {
       "day": "2026-10-20",
@@ -3665,7 +3665,7 @@
       "model": "hermes-4-405b",
       "n": 2,
       "outputSum": 120,
-      "durationMsSum": 8500,
+      "durationMsSum": 8300,
       "latencyBins": [
         0,
         0,
@@ -3741,7 +3741,7 @@
       "toolN": 0,
       "toolLnSum": 0.0,
       "toolFailed": 0,
-      "activeMs": 8500
+      "activeMs": 8300
     },
     {
       "day": "2026-10-20",

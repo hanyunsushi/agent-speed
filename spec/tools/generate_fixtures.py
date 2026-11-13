@@ -1354,9 +1354,9 @@ B = 1_000_000_000_000
 DAY = B - 3_600_000
 
 
-def er(key, agent, source, model, start, end, out, inp=0, final=True):
+def er(key, agent, source, model, start, end, out, inp=0, final=True, first=None):
     return {"key": key, "agentId": agent, "source": source, "model": model, "startMs": start, "endMs": end,
-            "input": inp, "output": out, "final": final}
+            "firstMs": first, "input": inp, "output": out, "final": final}
 
 
 def agent(aid, source, model, phase="idle", in_flight=None, last=None, parent=None):
@@ -1382,11 +1382,11 @@ cases = [
      "responses": [er("r1", "a1", "codex", "m1", B, B + 4000, 200),
                    er("r2", "a2", "claudeCode", "m2", B + 1000, B + 3000, 100)],
      "queries": [{"nowMs": B + 3000, "liveOutput": 250 / 3, "liveTotal": 250 / 3, "estimatedShare": 0.0}]},
-    {"name": "durations shorter than 500 ms are widened backwards",
+    {"name": "decode speed starts at the first token",
      "agents": [agent("a1", "codex", "m1", last=B + 1100)],
-     "responses": [er("r1", "a1", "codex", "m1", B + 1000, B + 1100, 10)],
+     "responses": [er("r1", "a1", "codex", "m1", B + 1000, B + 1100, 10, first=B + 1050)],
      "queries": [{"nowMs": B + 1100, "liveOutput": 10 / 3, "liveTotal": 10 / 3, "estimatedShare": 0.0},
-                 {"nowMs": B + 3700, "liveOutput": 8 / 3, "liveTotal": 8 / 3, "estimatedShare": 0.0}]},
+                 {"nowMs": B + 3700, "liveOutput": 10 / 3, "liveTotal": 10 / 3, "estimatedShare": 0.0}]},
     {"name": "unknown or implausible intervals never count as speed",
      "agents": [agent("a1", "codex", "m1", last=B + 960_000)],
      "responses": [er("r1", "a1", "codex", "m1", None, B + 2000, 500),

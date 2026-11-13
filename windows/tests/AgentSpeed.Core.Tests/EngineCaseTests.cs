@@ -60,7 +60,7 @@ public sealed class EngineCaseTests
                     response.GetProperty("endMs").GetInt64(),
                     new TokenCounts(Input: response.GetProperty("input").GetInt64(), Output: response.GetProperty("output").GetInt64()),
                     !response.TryGetProperty("final", out var final) || final.GetBoolean(),
-                    CostMicroUsd: OptionalLong(response, "costMicroUsd")),
+                    CostMicroUsd: OptionalLong(response, "costMicroUsd")) { FirstMs = OptionalLong(response, "firstMs") },
                 isCompletion: true,
                 seeded: true);
         }

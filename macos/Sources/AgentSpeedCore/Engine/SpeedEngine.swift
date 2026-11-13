@@ -580,7 +580,11 @@ struct SpeedEngine: Sendable {
             duration: duration,
             speed: duration.map { Double(record.usage.output) / $0 },
             endedAt: Date(timeIntervalSince1970: TimeInterval(record.endMs) / 1000),
-            host: record.host
+            host: record.host,
+            ttftMs: record.startMs.flatMap { start in
+                guard let first = record.firstMs, first >= start else { return nil }
+                return first - start
+            }
         )
     }
 }

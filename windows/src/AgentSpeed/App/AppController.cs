@@ -824,7 +824,12 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         var title = _titles.Text(_speed.Title, _titles.General);
         var money = LiveMoney();
         var bar = money is null ? ((string?)null, _loc["unit.tokS"]) : CostDisplay.BarValue(money, s.BarShowUnit);
+        var valueText = money is null ? SpeedFormat.Speed(_speed.Value) + TtftSuffix() : null;
         var accessible = money is null ? DisplayText.Accessibility(_speed.Value, title, _loc) : _cost.Display.LiveAccessibility(money, title);
+        if (money is null && _speed.Snapshot.LastResponse?.TtftMs is { } ttft)
+        {
+            accessible += $" · TTFT {FormatTtft(ttft)}";
+        }
         var secondary = BarSecondaryValue();
         if (secondary is not null)
         {
@@ -849,7 +854,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             _theme.ReduceMotion,
             bar.Item2,
             $"{_loc["app.name"]}: {accessible}",
-            bar.Item1,
+            valueText ?? bar.Item1,
             money?.Unknown ?? false,
             secondary,
             traffic,
@@ -892,10 +897,16 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         var title = _titles.Text(_speed.Title, _titles.General);
         var main = LiveMoney() is { } money
             ? $"{money.NumberText} {money.Unit}"
-            : $"{SpeedFormat.Speed(_speed.Value)} {_loc["unit.tokS"]}";
+            : $"{SpeedFormat.Speed(_speed.Value)} {_loc["unit.tokS"]}{TtftSuffix()}";
         var line = BarSecondaryValue() is { } secondary ? $"{main} · {secondary.Spoken} · {title}" : $"{main} · {title}";
         return BarReadouts.Append(line, " · ", BarTrafficBlock.From(Settings, _traffic.Snapshot, _loc), BarIntelligence());
     }
+
+    private string TtftSuffix() => _speed.Snapshot.LastResponse?.TtftMs is { } ttft ? $" · TTFT {FormatTtft(ttft)}" : string.Empty;
+
+    private static string FormatTtft(long milliseconds) => milliseconds < 1000
+        ? $"{milliseconds}ms"
+        : $"{milliseconds / 1000.0:F2}s";
 
     // ---- Traffic ----
 

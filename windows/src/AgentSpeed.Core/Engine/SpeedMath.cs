@@ -11,9 +11,7 @@ internal readonly record struct Interval(long StartMs, long EndMs)
 internal static class SpeedMath
 {
     public const long MaxIntervalMs = 15 * 60_000;
-    public const long MinDurationMs = 500;
-
-    /// <summary>The widened speed interval <c>[start', end]</c>, or false when the response never counts as speed.</summary>
+    /// <summary>The decode interval <c>[first token, end]</c>, falling back to request start when first content is unknown.</summary>
     public static bool TryGetSpeedInterval(ParsedResponse response, out Interval interval)
     {
         if (response.StartMs is not { } start || response.EndMs < start || response.EndMs - start > MaxIntervalMs)
@@ -22,7 +20,12 @@ internal static class SpeedMath
             return false;
         }
 
-        var effectiveStart = response.EndMs - start < MinDurationMs ? response.EndMs - MinDurationMs : start;
+        var effectiveStart = response.FirstMs is { } first && first >= start && first < response.EndMs ? first : start;
+        if (response.EndMs <= effectiveStart)
+        {
+            interval = default;
+            return false;
+        }
         interval = new Interval(effectiveStart, response.EndMs);
         return true;
     }

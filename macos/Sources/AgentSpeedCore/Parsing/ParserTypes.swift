@@ -27,7 +27,7 @@ public struct ResponseRecord: Equatable, Hashable, Sendable {
     public var host: String
 
     /// A final response with a valid interval contributes measured speed.
-    public var isMeasured: Bool { isFinal && ResponseTiming.effectiveStart(startMs: startMs, endMs: endMs) != nil }
+    public var isMeasured: Bool { isFinal && ResponseTiming.effectiveStart(startMs: startMs, firstMs: firstMs, endMs: endMs) != nil }
 
     public init(
         key: String,

@@ -96,7 +96,9 @@ std::int64_t estimateStart(const Agent& a, const std::vector<Response>& response
 
 std::optional<std::pair<std::int64_t, std::int64_t>> interval(const Response& r) {
     if (!r.startMs || r.endMs < *r.startMs || r.endMs - *r.startMs > 15 * 60'000) return std::nullopt;
-    return std::make_pair(std::min(*r.startMs, r.endMs - 500), r.endMs);
+    const auto start = r.firstMs && *r.firstMs >= *r.startMs && *r.firstMs < r.endMs ? *r.firstMs : *r.startMs;
+    if (r.endMs <= start) return std::nullopt;
+    return std::make_pair(start, r.endMs);
 }
 
 std::optional<Speed> estimatedSpeed(const std::vector<const Response*>& valid, std::int64_t now, const Agent& agent) {

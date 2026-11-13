@@ -4,7 +4,7 @@ import Foundation
 /// call's numbers under the resolved id of its model and its agent's source, with the watch epoch it counted in.
 public struct ReportPerfCompletion: Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
-        /// `startMs` as logged (the latency's start); the duration uses the 500 ms rule.
+        /// `startMs` as logged; the duration uses decode time from `firstMs` when present.
         case response(startMs: Int64, endMs: Int64, firstMs: Int64?, output: Int, reasoning: Int, input: Int,
                       cachedInput: Int)
         case call(callMs: Int64, resultMs: Int64, failed: Bool?)
@@ -30,7 +30,8 @@ public struct ReportPerfCompletion: Equatable, Sendable {
     /// The interval the online union rule covers.
     var interval: (start: Int64, end: Int64) {
         switch kind {
-        case .response(let start, let end, _, _, _, _, _): (min(start, end - ResponseTiming.minDurationMs), end)
+        case .response(let start, let end, let first, _, _, _, _):
+            (first.flatMap { $0 >= start && $0 < end ? $0 : nil } ?? start, end)
         case .call(let call, let result, _): (call, result)
         }
     }

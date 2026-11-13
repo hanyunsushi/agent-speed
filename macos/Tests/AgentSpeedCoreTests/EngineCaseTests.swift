@@ -41,7 +41,8 @@ struct EngineCaseTests {
                 endMs: try #require(response.int64("endMs")),
                 usage: TokenUsage(input: response.int("input"), output: response.int("output")),
                 isFinal: response["final"] as? Bool ?? true,
-                costMicroUsd: response.int64("costMicroUsd")
+                costMicroUsd: response.int64("costMicroUsd"),
+                firstMs: response.int64("firstMs")
             )
             engine.upsert(record, project: "fixture", isCompletion: true, emitsEvents: false)
         }

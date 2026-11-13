@@ -1036,7 +1036,9 @@ internal sealed class SpeedEngine
             response.Tokens.Total,
             duration,
             speed,
-            UnixTime.FromMs(response.EndMs)) { Host = response.Host };
+            UnixTime.FromMs(response.EndMs),
+            response.StartMs is { } start && response.FirstMs is { } first && first >= start ? first - start : null)
+        { Host = response.Host };
     }
 
     /// <param name="CostRate">micro-USD per second of the same reference responses (METRICS 9.5); null when none has a known cost.</param>

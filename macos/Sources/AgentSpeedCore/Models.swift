@@ -268,8 +268,10 @@ public struct ResponseSummary: Equatable, Sendable {
     public var totalTokens: Int
     /// Nil when the request start is unknown.
     public var duration: TimeInterval?
-    /// Output tok/s, nil when the duration is unknown.
+    /// Decode output tok/s, nil when the duration is unknown.
     public var speed: Double?
+    /// Time to first token/content in milliseconds, nil when unavailable.
+    public var ttftMs: Int64?
     public var endedAt: Date
     /// `local`, or the remote host the response was read on.
     public var host: String
@@ -283,7 +285,8 @@ public struct ResponseSummary: Equatable, Sendable {
         duration: TimeInterval?,
         speed: Double?,
         endedAt: Date,
-        host: String = RemoteHost.localId
+        host: String = RemoteHost.localId,
+        ttftMs: Int64? = nil
     ) {
         self.host = host
         self.source = source
@@ -294,6 +297,7 @@ public struct ResponseSummary: Equatable, Sendable {
         self.duration = duration
         self.speed = speed
         self.endedAt = endedAt
+        self.ttftMs = ttftMs
     }
 }
 

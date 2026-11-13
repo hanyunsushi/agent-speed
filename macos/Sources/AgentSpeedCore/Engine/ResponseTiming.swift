@@ -3,12 +3,13 @@ import Foundation
 /// Interval rules of METRICS 3.3.
 enum ResponseTiming {
     static let maxIntervalMs: Int64 = 15 * 60_000
-    static let minDurationMs: Int64 = 500
-
-    /// The widened start (`startMs'`) of a valid interval, or nil when the interval does not count as speed.
-    static func effectiveStart(startMs: Int64?, endMs: Int64) -> Int64? {
+    /// The decode start (`firstMs` when available) of a valid interval, or nil when the interval does not count as speed.
+    /// The caller passes the first-content timestamp separately so sources without one retain the request-start fallback.
+    static func effectiveStart(startMs: Int64?, firstMs: Int64?, endMs: Int64) -> Int64? {
         guard let startMs, endMs >= startMs, endMs - startMs <= maxIntervalMs else { return nil }
-        return min(startMs, endMs - minDurationMs)
+        let decodeStart = firstMs.flatMap { $0 >= startMs && $0 < endMs ? $0 : nil } ?? startMs
+        guard endMs > decodeStart else { return nil }
+        return decodeStart
     }
 
     /// Length of the intersection of `[a0, a1]` and `[b0, b1]` in milliseconds.
@@ -36,7 +37,7 @@ struct TimedResponse: Sendable {
     var reasoning: Double { Double(min(record.usage.reasoning, record.usage.output)) }
 
     init?(_ record: ResponseRecord) {
-        guard let start = ResponseTiming.effectiveStart(startMs: record.startMs, endMs: record.endMs) else { return nil }
+        guard let start = ResponseTiming.effectiveStart(startMs: record.startMs, firstMs: record.firstMs, endMs: record.endMs) else { return nil }
         self.record = record
         startMs = start
     }

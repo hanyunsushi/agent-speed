@@ -27,6 +27,7 @@ final class StatusItemRenderer {
             let gauge = self.model.gauge
             let settings = self.model.settings
             _ = (gauge.revision, gauge.tier, gauge.readoutValue)
+            _ = model.snapshot.lastResponse?.ttftMs
             _ = (settings.barMode, settings.barShowsUnit, settings.barColoredGlyph, settings.effects)
             _ = (self.model.l10n.language, self.model.accessibility.increaseContrast, self.model.accessibility.reduceMotion)
             _ = settings.barSecondary
