@@ -98,5 +98,14 @@ enum StatusItemArtist {
             .foregroundColor: palette.secondary.nsColor,
         ])
         text.draw(at: CGPoint(x: layout.valueX + width + StatusItemLayout.unitGap, y: layout.baseline - unitFont.ascender))
+        if let ttft = layout.ttft {
+            let ttftText = NSAttributedString(string: ttft, attributes: [
+                .font: valueFont,
+                .foregroundColor: palette.secondary.nsColor,
+            ])
+            let unitX = layout.valueX + width + StatusItemLayout.unitGap
+            let ttftX = unitX + layout.unitWidth + StatusItemLayout.ttftGap
+            ttftText.draw(at: CGPoint(x: ttftX, y: layout.baseline - valueFont.ascender))
+        }
     }
 }

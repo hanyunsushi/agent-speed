@@ -23,11 +23,11 @@ struct StatusItemState: Equatable {
     init(model: AppModel, time: TimeInterval, valueWidth: CGFloat? = nil, secondaryWidth: CGFloat? = nil,
          intelligenceWidth: CGFloat? = nil) {
         let gauge = model.gauge
-        let (text, unit) = StatusItemValue.current(model)
-        layout = StatusItemLayout(model: model, unit: unit, valueWidth: valueWidth ?? StatusItemLayout.valueWidth(of: text))
+        let parts = StatusItemValue.current(model)
+        layout = StatusItemLayout(model: model, parts: parts, valueWidth: valueWidth ?? StatusItemLayout.valueWidth(of: parts.text))
         colored = model.settings.barColoredGlyph
         ring = layout.showsGlyph ? Ring(gauge: gauge, at: time, colored: colored, flickers: Self.flickers(model)) : .hidden
-        value = text
+        value = parts.text
         idle = gauge.tier == .idle
         increasedContrast = model.accessibility.increaseContrast
         secondary = StatusItemSecondary(model: model)

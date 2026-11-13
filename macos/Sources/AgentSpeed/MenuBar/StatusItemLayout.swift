@@ -13,6 +13,7 @@ struct StatusItemLayout: Equatable {
     /// Space between the ring and the value (the digits' side bearing adds about a point).
     static let glyphGap: CGFloat = 4
     static let unitGap: CGFloat = 3
+    static let ttftGap: CGFloat = 5
 
     let showsGlyph: Bool
     let showsValue: Bool
@@ -21,6 +22,8 @@ struct StatusItemLayout: Equatable {
     /// Room reserved for the value; at least the drawn text, briefly wider while a shorter value proves itself.
     let valueWidth: CGFloat
     let unitWidth: CGFloat
+    let ttft: String?
+    let ttftWidth: CGFloat
     let height: CGFloat
     /// The money block's width (gap included); 0 without it.
     var secondaryWidth: CGFloat = 0
@@ -31,21 +34,24 @@ struct StatusItemLayout: Equatable {
     /// Both readout blocks (DESIGN 10): fixed widths, so the item never changes width with their values.
     var readoutWidth: CGFloat { trafficWidth + intelligenceWidth }
 
-    init(mode: BarDisplayMode, showsUnit: Bool, unit: String, valueWidth: CGFloat, height: CGFloat) {
+    init(mode: BarDisplayMode, showsUnit: Bool, unit: String, ttft: String?, valueWidth: CGFloat, height: CGFloat) {
         showsGlyph = mode.showsGlyph
         showsValue = mode.showsValue
         self.unit = mode.showsValue && showsUnit && !unit.isEmpty ? unit : nil
         self.valueWidth = showsValue ? valueWidth : 0
         unitWidth = self.unit.map { Self.width(of: $0, font: Self.unitFont) } ?? 0
+        self.ttft = mode.showsValue ? ttft : nil
+        ttftWidth = self.ttft.map { Self.width(of: $0, font: Self.valueFont) } ?? 0
         self.height = height
     }
 
     @MainActor
-    init(model: AppModel, unit: String? = nil, valueWidth: CGFloat) {
+    init(model: AppModel, parts: StatusItemValue.Parts, valueWidth: CGFloat) {
         self.init(
             mode: model.settings.barMode,
             showsUnit: model.settings.barShowsUnit,
-            unit: unit ?? model.l10n("unit.tokS"),
+            unit: parts.unit,
+            ttft: parts.ttft,
             valueWidth: valueWidth,
             height: Self.barHeight
         )
@@ -70,6 +76,7 @@ struct StatusItemLayout: Equatable {
         if showsGlyph && showsValue { width += Self.glyphGap }
         if showsValue { width += valueWidth }
         if unit != nil { width += Self.unitGap + unitWidth }
+        if ttft != nil { width += Self.ttftGap + ttftWidth }
         return width + secondaryWidth + readoutWidth
     }
 

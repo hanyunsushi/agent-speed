@@ -5,15 +5,21 @@ import Foundation
 /// cost rate (`0.0042` · `US$/s`, or `$0.0042` with the unit hidden; `≥` when partly priced, `–` when nothing is).
 @MainActor
 enum StatusItemValue {
-    static func current(_ model: AppModel) -> (text: String, unit: String) {
+    struct Parts {
+        var text: String
+        var unit: String
+        var ttft: String?
+    }
+
+    static func current(_ model: AppModel) -> Parts {
         guard let money = money(model) else {
             let unit = model.l10n("unit.tokS")
             let ttft = model.snapshot.lastResponse?.ttftMs.map(formatTTFT)
-            return (SpeedFormat.speed(model.gauge.readoutValue), ttft.map { "\(unit)  \($0)" } ?? unit)
+            return Parts(text: SpeedFormat.speed(model.gauge.readoutValue), unit: unit, ttft: ttft)
         }
-        if money.unknown { return ("–", money.unit) }
+        if money.unknown { return Parts(text: "–", unit: money.unit, ttft: nil) }
         let number = model.settings.barShowsUnit ? money.number : money.inline
-        return ((money.atLeast ? "≥" : "") + number, money.unit)
+        return Parts(text: (money.atLeast ? "≥" : "") + number, unit: money.unit, ttft: nil)
     }
 
     private static func formatTTFT(_ milliseconds: Int64) -> String {
