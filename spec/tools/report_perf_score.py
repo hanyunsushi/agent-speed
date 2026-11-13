@@ -32,7 +32,7 @@ MAX_CALLS = 100_000             # Σ toolN of one report
 FIRST_SEEN_MS = 120_000         # METRICS 11.4: a completion older than this when read is history
 TOOL_MAX_MS = 15 * 60_000
 TOOL_FLOOR_MS = 50
-MIN_MS, MAX_MS = 500, 15 * 60_000
+MIN_MS, MAX_MS = 1, 15 * 60_000
 TOKEN_CAP = 10 ** 12
 LN_PLACES = 6
 BINS = 64
@@ -159,10 +159,10 @@ def merge_rows(rows) -> list:
 def response_row(source: str, response: dict) -> dict:
     """What one measured response adds (METRICS 6.11 Records), activeMs aside."""
     row = empty_row(source)
-    start = min(response["startMs"], response["endMs"] - MIN_MS)
+    first = response.get("firstMs")
+    start = first if first is not None and response["startMs"] <= first < response["endMs"] else response["startMs"]
     duration = response["endMs"] - start
     row["n"], row["outputSum"], row["durationMsSum"] = 1, response["output"], duration
-    first = response.get("firstMs")
     if first is not None and first >= response["startMs"]:
         row["bins"][latency_bin(first - response["startMs"])] = 1
     thought = min(response.get("reasoning", 0), response["output"])
@@ -292,7 +292,8 @@ class StatsLedger:
             r = event["response"]
             if not self.watch or not event.get("counted", True) or self.totals("n") >= MAX_RESPONSES:
                 return
-            start = min(r["startMs"], r["endMs"] - MIN_MS)
+            first = r.get("firstMs")
+            start = first if first is not None and r["startMs"] <= first < r["endMs"] else r["startMs"]
             self._add(r["model"], response_row(r["source"], r), r["agent"], start, r["endMs"])
         elif "call" in event:
             c = event["call"]
@@ -337,7 +338,7 @@ def _row_errors(row: dict, pointer: str) -> list:
     elif sum(c for _, c in row["latencyBins"]) > n:
         errors.append((pointer + "/latencyBins", "more latencies than responses"))
     if not MIN_MS * n <= row["durationMsSum"] <= MAX_MS * n:
-        errors.append((pointer + "/durationMsSum", "each response lasts 500 ms to 15 minutes"))
+        errors.append((pointer + "/durationMsSum", "each response has a positive decode duration no longer than 15 minutes"))
     if row["outputSum"] > TOKEN_CAP * n:
         errors.append((pointer + "/outputSum", "above 10^12 tokens per response"))
     if row["reasonN"] > n:
