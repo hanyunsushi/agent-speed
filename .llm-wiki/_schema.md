@@ -1,7 +1,7 @@
 ---
 title: Agent Speed fork wiki schema
 updated: 2026-11-16
-last_synced_commit: 85cc4644
+last_synced_commit: 334ba152f3c6160070be4ffa233047cd87d1badb
 commit_policy: committed
 authority_entry: ../docs/windows-fork.md
 ---

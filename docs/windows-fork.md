@@ -45,6 +45,8 @@ For a valid first-content timestamp, speed uses output tokens divided by the int
 first content to completion. Unknown/invalid first content falls back to request start;
 nonpositive durations are not measured. TTFT stays separate. Fixtures cover short responses,
 missing first content, performance scores, report statistics and history totals.
+The Linux remote relay uses the same timing. History cache versions advance with the formula,
+so available logs are reanalysed instead of retaining cached request-duration totals.
 
 ## Local replacement and rollback
 

@@ -15,10 +15,12 @@ constexpr std::int64_t kMinMs = -62'135'596'800'000 + 2 * 86'400'000LL;
 constexpr std::int64_t kMaxMs = 253'402'300'799'999 - 2 * 86'400'000LL;
 constexpr const char* kOtherOwner = "\x01other";
 
-// METRICS 3.3: the widened duration of a measured response.
+// METRICS 3.3: the positive decode duration, falling back to request start when first content is unknown.
 std::optional<std::int64_t> measuredDuration(const ParsedResponse& r) {
     if (!r.startMs || r.endMs < *r.startMs || r.endMs - *r.startMs > 15 * 60'000) return std::nullopt;
-    return r.endMs - std::min(*r.startMs, r.endMs - 500);
+    const auto start = r.firstMs && *r.firstMs >= *r.startMs && *r.firstMs < r.endMs ? *r.firstMs : *r.startMs;
+    if (r.endMs <= start) return std::nullopt;
+    return r.endMs - start;
 }
 
 void addCost(std::optional<std::int64_t>& cost, std::optional<std::int64_t>& unpriced, std::optional<std::int64_t> value,

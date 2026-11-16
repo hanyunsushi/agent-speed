@@ -96,7 +96,7 @@ TEST(SetReadouts, RecentSpeedReadsTheNewestThreeMeasuredResponsesOfTenMinutes) {
     const auto future = response("g", now - 1000, now + 1000, 999);
     EXPECT_EQ(perf::recentSpeed({&c, &b, &a, &d, &open, &old, &future}, now), (200.0 + 100 + 900) / 6.0);
     EXPECT_EQ(perf::recentSpeed({&open, &old, &future}, now), std::nullopt);
-    // A short response counts at least 500 ms, as everywhere in the engine.
+    // A short response uses its real positive duration, without a 500 ms floor.
     const auto quick = response("q", now - 100, now, 50);
-    EXPECT_EQ(perf::recentSpeed({&quick}, now), 100.0);
+    EXPECT_EQ(perf::recentSpeed({&quick}, now), 500.0);
 }
