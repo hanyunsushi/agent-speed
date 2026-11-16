@@ -52,6 +52,8 @@ internal sealed class TaskbarRenderer
     /// the number is right-aligned in it (DESIGN 3).
     /// </summary>
     public double SecondaryCell { get; set; }
+    /// <summary>The balance control's bounds in DIPs, taken from the last drawn frame.</summary>
+    public Rect BalanceHitRect { get; private set; } = Rect.Empty;
 
     /// <summary>Width (DIP) the second value's number needs now, for the host's governor; 0 without one.</summary>
     public double SecondaryNumberWidth(TaskbarState state, double scale)
@@ -163,6 +165,7 @@ internal sealed class TaskbarRenderer
 
         var width = widthPx / scale;
         var height = heightPx / scale;
+        BalanceHitRect = Rect.Empty;
         using (var dc = _visual.RenderOpen())
         {
             // Alpha 1/255 everywhere keeps the whole rectangle hit-testable without being visible.
@@ -249,6 +252,8 @@ internal sealed class TaskbarRenderer
 
         if (state.BalanceText is { } balance) {
             var text = BalanceText(balance, colors.Primary, scale);
+            var trailing = ShowsSecondary(state) || ShowsTraffic(state) || ShowsIntelligence(state) ? 0 : Padding;
+            BalanceHitRect = new Rect(x, 0, 8 + text.WidthIncludingTrailingWhitespace + trailing, height);
             dc.DrawText(text, new Point(x + 8, centerY - text.Height / 2));
             x += 8 + text.WidthIncludingTrailingWhitespace;
         }
@@ -314,6 +319,7 @@ internal sealed class TaskbarRenderer
 
         if (state.BalanceText is { } balance) {
             var text = BalanceText(balance, colors.Primary, 1);
+            BalanceHitRect = new Rect(0, y, width, 24);
             if (text.WidthIncludingTrailingWhitespace > width - 8) text.SetFontSize(Math.Max(7, 12 * (width - 8) / text.WidthIncludingTrailingWhitespace));
             dc.DrawText(text, new Point((width - text.WidthIncludingTrailingWhitespace) / 2, y + 4));
             y += 24;

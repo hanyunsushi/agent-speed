@@ -100,4 +100,47 @@ struct StatusItemMeasuredTests {
         #expect(Set(images).count == 3) // Each stored choice produces a distinct rendered result.
     }
 
+    @Test func balanceClicksUseTheirOwnControlEvenWithoutACurrentMouseEvent() throws {
+        _ = NSApplication.shared
+        var layout = StatusItemLayout(mode: .glyphValue, showsUnit: false, unit: "", ttft: nil, valueWidth: 20, height: 24)
+        layout.tokenRings = true
+        layout.balanceWidth = 120
+        let button = NSButton(frame: NSRect(x: 0, y: 0, width: layout.length + 10, height: 24))
+        let balance = StatusItemBalanceButton(frame: StatusItemController.balanceButtonFrame(layout: layout, bounds: button.bounds))
+        balance.isBordered = false
+        balance.isTransparent = true
+        balance.autoresizingMask = [.minXMargin, .maxXMargin, .height]
+        let recorder = MenuBarClickRecorder()
+        button.target = recorder
+        button.action = #selector(MenuBarClickRecorder.speed)
+        balance.target = recorder
+        balance.action = #selector(MenuBarClickRecorder.balances)
+        button.addSubview(balance)
+        balance.itemLayout = layout
+        // Exercise native hit testing, including the rightmost padding, and activation without NSApp.currentEvent.
+        for x in [balance.frame.minX + 1, balance.frame.midX, button.bounds.maxX - 6] {
+            let hit = try #require(button.hitTest(NSPoint(x: x, y: 12)) as? NSButton)
+            #expect(hit === balance)
+            hit.performClick(nil)
+        }
+        #expect(recorder.balanceCount == 3 && recorder.speedCount == 0)
+        let speed = try #require(button.hitTest(NSPoint(x: 10, y: 12)) as? NSButton)
+        #expect(speed === button)
+        speed.performClick(nil)
+        #expect(recorder.speedCount == 1 && recorder.balanceCount == 3)
+        // Native status item width changes may arrive after assigning the new image.
+        button.setFrameSize(NSSize(width: button.frame.width + 20, height: 24))
+        #expect(balance.frame == StatusItemController.balanceButtonFrame(layout: layout, bounds: button.bounds))
+        #expect(StatusItemController.balanceButtonFrame(layout: StatusItemLayout(mode: .glyph, showsUnit: false,
+            unit: "", ttft: nil, valueWidth: 0, height: 24), bounds: button.bounds) == .zero)
+    }
+
+}
+
+@MainActor
+private final class MenuBarClickRecorder: NSObject {
+    var speedCount = 0
+    var balanceCount = 0
+    @objc func speed() { speedCount += 1 }
+    @objc func balances() { balanceCount += 1 }
 }

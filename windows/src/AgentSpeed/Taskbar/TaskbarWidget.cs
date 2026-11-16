@@ -25,6 +25,7 @@ internal sealed class TaskbarWidget : IDisposable
     }
 
     public event EventHandler<RECT>? Invoked;
+    public event EventHandler? BalanceInvoked;
 
     public event EventHandler<POINT>? MenuRequested;
 
@@ -164,7 +165,8 @@ internal sealed class TaskbarWidget : IDisposable
             {
                 case TaskbarSignal.Invoked invoked:
                     Bounds = invoked.Bounds;
-                    Invoked?.Invoke(this, invoked.Bounds);
+                    if (invoked.IsBalance) BalanceInvoked?.Invoke(this, EventArgs.Empty);
+                    else Invoked?.Invoke(this, invoked.Bounds);
                     break;
                 case TaskbarSignal.MenuRequested menu:
                     MenuRequested?.Invoke(this, menu.Cursor);

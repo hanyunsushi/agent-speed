@@ -196,6 +196,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
         _taskbar = new TaskbarWidget(_ui);
         _taskbar.Invoked += (_, bounds) => ToggleDashboard(Center(bounds));
+        _taskbar.BalanceInvoked += (_, _) => OpenSubscriptionBalances();
         _taskbar.MenuRequested += (_, _) => ShowMenu();
         _taskbar.HoverChanged += (_, hover) => OnTaskbarHover(hover.IsOver, hover.Bounds);
         _taskbar.PresenceChanged += (_, _) => _settingsModel?.UpdateLive(_speed.Snapshot, _taskbar.Presence);

@@ -9,6 +9,7 @@ final class StatusItemRenderer {
 
     private let model: AppModel
     private let item: NSStatusItem
+    private let didRender: (StatusItemState) -> Void
     private var widthGovernor = StatusItemWidthGovernor()
     private var secondaryGovernor = StatusItemWidthGovernor()
     private var intelligenceGovernor = StatusItemWidthGovernor()
@@ -19,9 +20,10 @@ final class StatusItemRenderer {
     private var lastState: StatusItemState?
     private var lastImageAt: TimeInterval = -.infinity
 
-    init(model: AppModel, item: NSStatusItem) {
+    init(model: AppModel, item: NSStatusItem, didRender: @escaping (StatusItemState) -> Void = { _ in }) {
         self.model = model
         self.item = item
+        self.didRender = didRender
         loop = ObservationLoop { [weak self] in
             guard let self else { return }
             let gauge = self.model.gauge
@@ -74,6 +76,7 @@ final class StatusItemRenderer {
             lastImageAt = now
             if item.length != state.layout.length { item.length = state.layout.length }
             item.button?.image = StatusItemArtist.image(for: state)
+            didRender(state)
         }
         scheduleShrink()
         scheduleFrames(now: now)
@@ -89,7 +92,7 @@ final class StatusItemRenderer {
     }
 
     /// The current state, with the value's room decided by the width governor.
-    func state(at time: TimeInterval) -> StatusItemState {
+    private func state(at time: TimeInterval) -> StatusItemState {
         let needed = StatusItemLayout.valueWidth(of: StatusItemValue.current(model).text)
         _ = widthGovernor.update(needed: needed, now: time)
         _ = secondaryGovernor.update(needed: StatusItemSecondary(model: model)?.numberWidth ?? 0, now: time)
