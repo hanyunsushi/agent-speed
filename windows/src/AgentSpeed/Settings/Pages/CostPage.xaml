@@ -109,6 +109,11 @@
             </Border>
         </controls:SettingsCard>
 
+        <TextBlock Text="Sub 4 Tokens" Style="{StaticResource SectionHeaderText}" Margin="2,20,0,4" />
+        <Border Style="{StaticResource GroupCard}">
+            <ContentControl x:Name="SubscriptionBalanceHost" />
+        </Border>
+
         <!-- 3. Subscriptions -->
         <TextBlock Text="{loc:Loc settings.cost.subscriptions}" Style="{StaticResource SectionHeaderText}" Margin="2,20,0,4"
                    AutomationProperties.HeadingLevel="Level2" />

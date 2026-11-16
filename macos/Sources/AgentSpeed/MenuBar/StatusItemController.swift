@@ -1,18 +1,19 @@
 import AppKit
+import OSLog
 
 /// Owns the menu bar item: a status item that hugs its content, showing the image drawn by `StatusItemArtist`.
 ///
-/// The speed area toggles the dashboard; the balance control opens balances. Secondary clicks open the quick menu.
+/// Left click toggles the dashboard; right-click, ⌃-click or ⌥-click opens the quick menu anchored under the item.
 /// Clicks act on mouse down like native extras.
 @MainActor
 final class StatusItemController: NSObject, NSMenuDelegate {
+    private static let clicks = Logger(subsystem: "cc.agentspeed.clicks", category: "menu-bar")
     private static let autosaveName = "AgentSpeedStatusItem"
 
     private let model: AppModel
     private let item: NSStatusItem
     private var accessibility: StatusItemAccessibility?
     private var renderer: StatusItemRenderer?
-    private let balanceButton = StatusItemBalanceButton(frame: .zero)
     private var isHighlighted = false
     private var isMenuScheduled = false
 
@@ -50,41 +51,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         button.imageScaling = .scaleNone
         button.imagePosition = .imageOnly
-        balanceButton.isBordered = false
-        balanceButton.isTransparent = true
-        balanceButton.title = ""
-        balanceButton.focusRingType = .none
-        balanceButton.autoresizingMask = [.minXMargin, .maxXMargin, .height]
-        balanceButton.target = self
-        balanceButton.action = #selector(showBalances)
-        balanceButton.sendAction(on: [.leftMouseDown])
-        balanceButton.setAccessibilityLabel("Sub 4 Tokens — 订阅余额")
-        balanceButton.onSecondaryClick = { [weak self] in self?.scheduleQuickMenu() }
-        button.addSubview(balanceButton)
-        renderer = StatusItemRenderer(model: model, item: item) { [weak self] state in
-            self?.updateBalanceButton(state)
-        }
-    }
-
-    private func updateBalanceButton(_ state: StatusItemState) {
-        balanceButton.isHidden = state.balance == nil
-        balanceButton.itemLayout = state.layout
-        balanceButton.setAccessibilityValue(state.balance)
-        balanceButton.toolTip = state.balance
-    }
-
-    static func balanceButtonFrame(layout: StatusItemLayout, bounds: NSRect) -> NSRect {
-        guard layout.balanceWidth > 0 else { return .zero }
-        // NSStatusBarButton centers its unscaled image inside its bounds.
-        let imageX = bounds.midX - layout.length / 2
-        let trailingPadding = layout.secondaryWidth + layout.readoutWidth == 0 ? StatusItemLayout.padding : 0
-        return NSRect(x: imageX + layout.balanceX, y: bounds.minY,
-                      width: layout.balanceWidth + trailingPadding, height: bounds.height)
-    }
-
-    @objc private func showBalances() {
-        model.commands?.closeDashboard()
-        model.showSubscriptionBalances?()
+        renderer = StatusItemRenderer(model: model, item: item)
     }
 
     // MARK: Clicks
@@ -96,12 +63,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             || !(event?.modifierFlags.intersection([.option, .control]).isEmpty ?? true)
         if isSecondary {
             scheduleQuickMenu()
-        } else if !balanceButton.isHidden, let window = sender.window,
-                  balanceButton.frame.contains(sender.convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)) {
-            // Some menu-bar activation paths target the parent button directly. Use its actual child frame,
-            // with the pointer converted from screen coordinates, rather than the event's possibly different window.
-            showBalances()
         } else {
+            Self.clicks.notice("action=speed")
             model.commands?.toggleDashboard()
             reapplyHighlightAfterTracking()
         }
@@ -144,33 +107,5 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         RunLoop.main.perform(inModes: [.default]) { [weak self] in
             MainActor.assumeIsolated { self?.applyHighlight() }
         }
-    }
-}
-
-/// A real child control routes balance clicks without relying on NSApp.currentEvent's window coordinates.
-final class StatusItemBalanceButton: NSButton {
-    var onSecondaryClick: (() -> Void)?
-    var itemLayout: StatusItemLayout? { didSet { updateFrame() } }
-
-    override func resize(withOldSuperviewSize oldSize: NSSize) {
-        super.resize(withOldSuperviewSize: oldSize)
-        updateFrame()
-    }
-
-    private func updateFrame() {
-        guard let itemLayout, let superview else { return }
-        frame = StatusItemController.balanceButtonFrame(layout: itemLayout, bounds: superview.bounds)
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        if !event.modifierFlags.intersection([.option, .control]).isEmpty {
-            onSecondaryClick?()
-        } else {
-            super.mouseDown(with: event)
-        }
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        onSecondaryClick?()
     }
 }

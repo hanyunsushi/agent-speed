@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SubscriptionBalancePopover: View {
+struct SubscriptionBalanceSettings: View {
     @Bindable var state: SubscriptionBalanceState
     @State private var baseURLDraft = ""
     @State private var adminAPIKeyDraft = ""
@@ -11,7 +11,7 @@ struct SubscriptionBalancePopover: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Customize Sub 4 Tokens").font(.headline)
+                    Text("订阅余额").font(.headline)
                     Text(state.lastRefresh.map { "Updated \($0.formatted(date: .omitted, time: .shortened))" } ?? "Waiting for first refresh")
                         .font(.caption).foregroundStyle(.secondary)
                 }

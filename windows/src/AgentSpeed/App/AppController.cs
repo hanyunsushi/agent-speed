@@ -41,16 +41,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
     private const double HeroDiameter = 112;
 
     private Subscriptions.SubscriptionBalanceService? _subscriptionBalances;
-    private Subscriptions.SubscriptionBalanceWindow? _subscriptionBalanceWindow;
-    public void OpenSubscriptionBalances()
-    {
-        if (_subscriptionBalances is null) return;
-        if (_subscriptionBalanceWindow is null) {
-            _subscriptionBalanceWindow = new(_subscriptionBalances);
-            _subscriptionBalanceWindow.Closed += (_, _) => _subscriptionBalanceWindow = null;
-        }
-        _subscriptionBalanceWindow.Show(); _subscriptionBalanceWindow.Activate();
-    }
+    public void OpenSubscriptionBalances() => OpenSettings("cost");
 
     private readonly App _app;
     private readonly SingleInstance _instance;
@@ -196,7 +187,6 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
         _taskbar = new TaskbarWidget(_ui);
         _taskbar.Invoked += (_, bounds) => ToggleDashboard(Center(bounds));
-        _taskbar.BalanceInvoked += (_, _) => OpenSubscriptionBalances();
         _taskbar.MenuRequested += (_, _) => ShowMenu();
         _taskbar.HoverChanged += (_, hover) => OnTaskbarHover(hover.IsOver, hover.Bounds);
         _taskbar.PresenceChanged += (_, _) => _settingsModel?.UpdateLive(_speed.Snapshot, _taskbar.Presence);
@@ -487,7 +477,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             _settingsModel.ReduceMotion = _theme.ReduceMotion;
             _settingsModel.DarkTheme = _theme.IsDark;
             _settingsModel.UpdateLive(_speed.Snapshot, _taskbar?.Presence ?? TaskbarPresence.Hidden);
-            _settingsWindow = new SettingsWindow(_settingsModel) { Language = AppFonts.XmlLanguageFor(_loc.LanguageCode) };
+            _settingsWindow = new SettingsWindow(_settingsModel, _subscriptionBalances) { Language = AppFonts.XmlLanguageFor(_loc.LanguageCode) };
             _settingsWindow.Closed += (_, _) =>
             {
                 _settingsWindow = null;
@@ -556,7 +546,6 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         }
 
         _disposed = true;
-        Try(() => _subscriptionBalanceWindow?.Close());
         Try(() => _subscriptionBalances?.Dispose());
         Try(() => _historyStartFallback?.Stop());
         Try(() => _history?.Dispose());

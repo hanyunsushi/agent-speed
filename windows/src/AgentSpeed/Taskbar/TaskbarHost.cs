@@ -12,7 +12,7 @@ namespace AgentSpeed.Taskbar;
 
 internal abstract record TaskbarSignal
 {
-    public sealed record Invoked(RECT Bounds, bool IsBalance = false) : TaskbarSignal;
+    public sealed record Invoked(RECT Bounds) : TaskbarSignal;
 
     public sealed record MenuRequested(POINT Cursor) : TaskbarSignal;
 
@@ -783,9 +783,7 @@ internal sealed unsafe class TaskbarHost : IDisposable
             : pressed;
         if (click)
         {
-            var balance = User32.GetCursorPos(out var point) && _renderer.BalanceHitRect.Contains(
-                new System.Windows.Point((point.X - bounds.Left) / _scale, (point.Y - bounds.Top) / _scale));
-            _signal(new TaskbarSignal.Invoked(bounds, balance));
+            _signal(new TaskbarSignal.Invoked(bounds));
         }
     }
 

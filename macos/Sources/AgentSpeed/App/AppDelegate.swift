@@ -6,7 +6,6 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
     private let options: LaunchOptions
     private var model: AppModel?
-    private var subscriptionBalances: SubscriptionBalanceController?
     private var statusItem: StatusItemController?
     private var orbs: OrbWindowManager?
     private var boardWindows: BoardWindowManager?
@@ -91,9 +90,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
         model.commands = self
         self.model = model
         model.activate(live: true)
-        let balances = SubscriptionBalanceController(state: model.subscriptionBalances)
-        subscriptionBalances = balances
-        model.showSubscriptionBalances = { [weak balances] in balances?.showSettings() }
         model.subscriptionBalances.start()
 
         let dashboard = DashboardController(model: model)
@@ -217,7 +213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        subscriptionBalances?.stop()
+        model?.subscriptionBalances.stop()
         updateScheduler?.stop()
         boardWindows?.shutdown()
         orbs?.shutdown()

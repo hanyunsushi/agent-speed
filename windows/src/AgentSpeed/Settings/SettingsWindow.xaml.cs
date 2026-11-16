@@ -10,11 +10,12 @@ internal sealed partial class SettingsWindow : Window
 {
     private readonly SettingsViewModel _viewModel;
 
-    public SettingsWindow(SettingsViewModel viewModel)
+    public SettingsWindow(SettingsViewModel viewModel, Subscriptions.SubscriptionBalanceService? balances = null)
     {
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
+        if (balances is not null) CostPage.AttachSubscriptionBalances(balances);
         viewModel.PropertyChanged += OnViewModelChanged;
         ShowPage();
         LoadIcon();

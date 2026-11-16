@@ -7,7 +7,7 @@ using AgentSpeed.Core.Subscriptions;
 namespace AgentSpeed.Subscriptions;
 
 /// <summary>Original Sub4Tokens content and controls, hosted by Agent Speed on Windows.</summary>
-internal sealed class SubscriptionBalanceWindow : Window
+internal sealed class SubscriptionBalancePanel : UserControl
 {
     private readonly SubscriptionBalanceService _service;
     private readonly StackPanel _rows = new();
@@ -15,13 +15,11 @@ internal sealed class SubscriptionBalanceWindow : Window
     private readonly TextBox _base = new();
     private readonly PasswordBox _admin = new(), _access = new(), _refresh = new();
     private readonly Button _refreshButton = new() { Content = "Refresh", HorizontalAlignment = HorizontalAlignment.Right };
-    public SubscriptionBalanceWindow(SubscriptionBalanceService service)
+    public SubscriptionBalancePanel(SubscriptionBalanceService service)
     {
         _service = service;
-        Title = "Sub 4 Tokens"; Width = 400; Height = 650; MinWidth = 360; MaxHeight = 850;
-        WindowStartupLocation = WindowStartupLocation.CenterScreen;
         var panel = new StackPanel { Margin = new Thickness(16) };
-        Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Content = panel;
         panel.Children.Add(new TextBlock { Text = "Customize Sub 4 Tokens", FontSize = 17, FontWeight = FontWeights.SemiBold });
         panel.Children.Add(_updated); panel.Children.Add(_refreshButton); panel.Children.Add(_error); panel.Children.Add(_rows);
         _refreshButton.Click += async (_, _) => await service.Refresh();
@@ -60,7 +58,9 @@ internal sealed class SubscriptionBalanceWindow : Window
         panel.Children.Add(new Expander { Header = "Sub2API connection", Content = connection });
         panel.Children.Add(new TextBlock { Text = "A6API Cookie stays in Sub2API. Credentials are saved in Windows Credential Manager.",
             FontSize = 11, Foreground = Brushes.Gray, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0) });
-        service.Changed += Update; Closed += (_, _) => service.Changed -= Update; Update();
+        Loaded += (_, _) => { service.Changed -= Update; service.Changed += Update; Update(); };
+        Unloaded += (_, _) => service.Changed -= Update;
+        Update();
     }
     private static void Row(Panel panel, string name, Control input)
     {

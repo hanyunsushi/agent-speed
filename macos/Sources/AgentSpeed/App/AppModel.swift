@@ -38,7 +38,6 @@ protocol AppCommands: AnyObject {
 @Observable
 final class AppModel {
     @ObservationIgnored lazy var subscriptionBalances = SubscriptionBalanceState()
-    @ObservationIgnored var showSubscriptionBalances: (() -> Void)?
     let store: SpeedStore
     /// Daily usage (METRICS 8) for the history window, filled by `HistoryService` (or previews).
     let history: HistoryStore

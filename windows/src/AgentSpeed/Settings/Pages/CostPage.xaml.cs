@@ -16,6 +16,9 @@ internal sealed partial class CostPage : UserControl
         InitializeComponent();
     }
 
+    public void AttachSubscriptionBalances(Subscriptions.SubscriptionBalanceService service) =>
+        SubscriptionBalanceHost.Content = new Subscriptions.SubscriptionBalancePanel(service);
+
     /// <summary>
     /// Status lines marked as polite live regions announce new text (rate failures, check results) once the layout has
     /// settled, only while they are on screen and only when the text actually changed.

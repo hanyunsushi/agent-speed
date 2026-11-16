@@ -85,43 +85,6 @@ public class TaskbarBlocksTests
         });
     }
 
-    [Theory]
-    [InlineData(1.0, false)]
-    [InlineData(1.5, false)]
-    [InlineData(2.0, false)]
-    [InlineData(1.0, true)]
-    [InlineData(1.5, true)]
-    [InlineData(2.0, true)]
-    public void BalanceClicksFollowTheDrawnRegionAndClearWhenHidden(double scale, bool vertical)
-    {
-        OnStaThread(() =>
-        {
-            var renderer = new TaskbarRenderer();
-            var state = TaskbarState.Initial with {
-                Enabled = true, Value = 180, AverageValue = 90, TokensMeasured = true, BalanceText = "Provider $20"
-            };
-            // Include retained extra space while the widget waits to shrink.
-            var length = renderer.MeasureLength(state, scale, vertical) + 40;
-            var width = vertical ? (int)(84 * scale) : length;
-            var height = vertical ? length : (int)(40 * scale);
-            var bytes = width * height * 4;
-            var buffer = Marshal.AllocHGlobal(bytes);
-            try {
-                renderer.Render(state, new BarScene(), width, height, scale, vertical, false, false, buffer, bytes);
-                var hit = renderer.BalanceHitRect;
-                Assert.False(hit.IsEmpty);
-                Assert.True(hit.Contains(new System.Windows.Point(hit.X + hit.Width / 2, hit.Y + hit.Height / 2)));
-                Assert.False(hit.Contains(new System.Windows.Point(0, 0)));
-                if (vertical) Assert.True(hit.Y >= 8 + 28 * 2 + 6);
-                else Assert.True(hit.X >= 8 + 28 * 2 + 6);
-                renderer.Render(state with { BalanceText = null }, new BarScene(), width, height, scale,
-                    vertical, false, false, buffer, bytes);
-                Assert.True(renderer.BalanceHitRect.IsEmpty);
-            } finally { Marshal.FreeHGlobal(buffer); }
-            return true;
-        });
-    }
-
     private static T OnStaThread<T>(Func<T> work)
     {
         T result = default!;

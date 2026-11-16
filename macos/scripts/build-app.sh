@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a universal, ad-hoc signed "Agent Speed.app" and a distributable zip.
+# Builds a universal "Agent Speed.app" and zip, using a persistent local signing identity when configured.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -20,7 +20,8 @@ usage() {
 Usage: $(basename "$0") [options]
 
 Builds a universal (arm64 + x86_64) release of Agent Speed, assembles
-"$APP_NAME.app", signs it ad hoc and packs it into $ZIP_NAME.
+"$APP_NAME.app", signs it and packs it into $ZIP_NAME. Uses a persistent
+local identity when configured; otherwise uses an ad-hoc signature.
 
 Options:
   --version X.Y.Z   Marketing version (default: contents of VERSION at the
@@ -107,7 +108,7 @@ for arch in "${RELAY_ARCHS[@]}"; do
     LC_ALL=C grep -a -q -x -F "$VERSION" <(strings -a "$relay") \
         || die "$relay was not built from version $VERSION." "Rebuild it with linux/relay/build-static.sh $arch."
 done
-for tool in swift lipo vtool xcrun codesign plutil ditto xattr strings od; do
+for tool in swift lipo vtool xcrun codesign plutil ditto xattr strings od python3; do
     command -v "$tool" >/dev/null 2>&1 || die "Required tool \"$tool\" was not found." "Install Xcode or the Xcode Command Line Tools."
 done
 [[ -f "$PLIST_TEMPLATE" ]] || die "Info.plist template not found at $PLIST_TEMPLATE."
@@ -214,12 +215,10 @@ for arch in "${RELAY_ARCHS[@]}"; do
 done
 info "Resources/relay/agent-speed-relay-linux-{${RELAY_ARCHS[*]// /,}}"
 
-step "Signing (ad hoc)"
+step "Signing"
 xattr -cr "$APP_DIR" 2>/dev/null || true
 # Nested code first, then the bundle that seals it.
-codesign --force --options runtime --timestamp=none --sign - "$APP_DIR/Contents/Helpers/$HELPER" \
-    || die "codesign failed to sign Contents/Helpers/$HELPER."
-codesign --force --options runtime --timestamp=none --sign - "$APP_DIR" \
+python3 "$SCRIPT_DIR/sign-local-app.py" --allow-ad-hoc "$APP_DIR" \
     || die "codesign failed to sign $APP_DIR."
 if ! VERIFY_LOG="$(codesign --verify --deep --strict --verbose=2 "$APP_DIR" 2>&1)"; then
     printf '%s\n' "$VERIFY_LOG" | sed 's/^/    /' >&2

@@ -9,7 +9,6 @@ final class StatusItemRenderer {
 
     private let model: AppModel
     private let item: NSStatusItem
-    private let didRender: (StatusItemState) -> Void
     private var widthGovernor = StatusItemWidthGovernor()
     private var secondaryGovernor = StatusItemWidthGovernor()
     private var intelligenceGovernor = StatusItemWidthGovernor()
@@ -20,10 +19,9 @@ final class StatusItemRenderer {
     private var lastState: StatusItemState?
     private var lastImageAt: TimeInterval = -.infinity
 
-    init(model: AppModel, item: NSStatusItem, didRender: @escaping (StatusItemState) -> Void = { _ in }) {
+    init(model: AppModel, item: NSStatusItem) {
         self.model = model
         self.item = item
-        self.didRender = didRender
         loop = ObservationLoop { [weak self] in
             guard let self else { return }
             let gauge = self.model.gauge
@@ -76,7 +74,6 @@ final class StatusItemRenderer {
             lastImageAt = now
             if item.length != state.layout.length { item.length = state.layout.length }
             item.button?.image = StatusItemArtist.image(for: state)
-            didRender(state)
         }
         scheduleShrink()
         scheduleFrames(now: now)
