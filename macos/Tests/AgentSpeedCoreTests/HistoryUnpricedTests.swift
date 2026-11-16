@@ -43,7 +43,7 @@ struct HistoryUnpricedTests {
 
     @Test func theAnalysisVersionCoversTheSideTables() {
         // 7: the unpriced facts (METRICS 9.10); 8: the task records (6.11).
-        #expect(HistoryAnalyzer.analysisVersion == 11)
+        #expect(HistoryAnalyzer.analysisVersion == 12)
     }
 
     @Test func sideRowsAreWrittenWithTheContributionsAndReadBack() throws {
