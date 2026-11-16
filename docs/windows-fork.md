@@ -35,6 +35,10 @@ dotnet test windows/AgentSpeed.slnx -c Release
 development builds with the documented loss of those features. Distributed fork packages
 use the `Windows fork` workflow, which builds both relays and publishes x64/ARM64 packages
 with both native helpers. Workflow artifacts include the package SHA-256.
+To publish an already verified build, create a draft release targeting its exact commit, then
+run `Publish Windows artifacts` with that build run ID and tag. The workflow verifies both
+archive checksums and publishes from GitHub's runners, without uploading the packages again
+from a local machine. It only accepts successful `Windows fork` builds and draft releases.
 
 Tests use junctions for directory-alias coverage on Windows, so they work without administrator
 privileges or Developer Mode. Unix-only remote-shell tests remain skipped on Windows.

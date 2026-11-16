@@ -1,0 +1,58 @@
+name: Publish Windows artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: Successful Windows fork build run ID
+        required: true
+      tag:
+        description: Existing draft release tag (for example v1.8.2)
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.build_run }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Validate build and draft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ ]]
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" > build.json
+          gh api "repos/$GH_REPO/releases" > releases.json
+          python3 - <<'PY'
+          import json, os
+          build = json.load(open('build.json'))
+          release = next(r for r in json.load(open('releases.json')) if r['tag_name'] == os.environ['RELEASE_TAG'])
+          assert build['conclusion'] == 'success' and build['name'] == 'Windows fork'
+          assert release['draft'], 'Only an existing draft may be published'
+          assert release['target_commitish'] == build['head_sha'], 'Release must target the exact validated build commit'
+          PY
+      - name: Download and verify Windows artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$BUILD_RUN" --name AgentSpeed-Windows-x64 --dir packages/x64
+          gh run download "$BUILD_RUN" --name AgentSpeed-Windows-arm64 --dir packages/arm64
+          (cd packages/x64 && sha256sum -c SHA256SUMS.txt)
+          (cd packages/arm64 && sha256sum -c SHA256SUMS.txt)
+          mkdir release
+          cp packages/x64/AgentSpeed-Windows-x64.zip packages/arm64/AgentSpeed-Windows-arm64.zip release/
+          cat packages/x64/SHA256SUMS.txt packages/arm64/SHA256SUMS.txt > release/SHA256SUMS.txt
+      - name: Publish verified packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "$RELEASE_TAG" release/* --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest
