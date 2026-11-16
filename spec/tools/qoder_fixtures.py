@@ -76,7 +76,7 @@ def agent_view(project, cwd, model, phase, last, responses, in_flight=None, malf
 
 
 def day_totals(responses, measured_models=False):
-    """UTC day totals (METRICS 8): measured = final with a valid interval, its duration widened to 500 ms."""
+    """UTC day totals (METRICS 8): positive request durations (Qoder records no first-content time)."""
     days = {}
     for r in responses:
         day = datetime.fromtimestamp(r["endMs"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
@@ -86,10 +86,10 @@ def day_totals(responses, measured_models=False):
         for field in ("input", "cachedInput", "cacheWriteInput", "output", "reasoning"):
             row[field] += r[field]
         start, end = r["startMs"], r["endMs"]
-        measured = start is not None and 0 <= end - start <= 15 * 60_000
+        measured = start is not None and 0 < end - start <= 15 * 60_000
         if measured:
             row["measuredOutput"] += r["output"]
-            row["measuredMs"] += max(500, end - start)
+            row["measuredMs"] += end - start
         row["agents"].add(r["agentId"])
         empty = dict(requests=0, output=0, measuredOutput=0, measuredMs=0) if measured_models else dict(requests=0,
                                                                                                        output=0)
@@ -98,7 +98,7 @@ def day_totals(responses, measured_models=False):
         model["output"] += r["output"]
         if measured_models and measured:
             model["measuredOutput"] += r["output"]
-            model["measuredMs"] += max(500, end - start)
+            model["measuredMs"] += end - start
     for row in days.values():
         row["agents"] = len(row["agents"])
     return days
@@ -210,7 +210,7 @@ def write_ide(root):
     china = Path(DATA) / CN_FOLDER / "SharedClientCache/cache/db/local.db"
     portable = Path("qoder/portable/user-data/SharedClientCache/cache/db/local.db")
     legacy = Path("qoder/legacy/SharedClientCache/cache/db/local.db")
-    a = str(intl) + "#"
+    a = intl.as_posix() + "#"
 
     # --- The international edition: current schema; rowid = position in this list --------------------------------
     rows = [
@@ -320,7 +320,7 @@ def write_ide(root):
         dict(id=uid(1, 102), session_id="lumen", role="assistant", gmt_create=at(11, 0, 3, 500),
              token_info=usage(9000, 150, 8192, 128000), model_info=tier("ultimate")),
     ])
-    c = str(china) + "#"
+    c = china.as_posix() + "#"
     china_agents = {c + "lumen": agent_view("lumen", "/Users/dev/projects/lumen", "ultimate", "tools",
                                             at(11, 0, 3, 500), [
         response("qoder:" + uid(1, 102), c + "lumen", at(11, 0, 0), at(11, 0, 3, 500), 9000, 8192, 150, "ultimate")])}
@@ -337,7 +337,7 @@ def write_ide(root):
         message(203, "harbor", "user", at(11, 31, 0), 202),
         message(204, "harbor", "assistant", at(11, 31, 4), 202, usage(4000, 90, 0), tier("auto")),
     ], [(uid(2, 202), "harbor", turn(at(11, 31, 0), at(11, 31, 4, 500)))])
-    p = str(portable) + "#"
+    p = portable.as_posix() + "#"
     portable_agents = {p + "harbor": agent_view("harbor", "/Users/dev/projects/harbor", "auto", "idle", at(11, 31, 4), [
         response("qoder:" + uid(1, 204), p + "harbor", at(11, 31, 0), at(11, 31, 4), 4000, 0, 90, "auto")])}
     portable_sessions = {p + "harbor": dict(rows=4, highestRowid=5)}
@@ -350,25 +350,25 @@ def write_ide(root):
                                     gmt_create=at(9, 0, 0)))
     finish(db, root / legacy)
 
-    one = dict(locations=[DATA + "/Qoder"], databases=[str(intl)], agents=intl_agents, sessions=intl_sessions)
+    one = dict(locations=[DATA + "/Qoder"], databases=[intl.as_posix()], agents=intl_agents, sessions=intl_sessions)
     two = dict(locations=["@auto", "qoder/portable/user-data/SharedClientCache/cache/db", "qoder/legacy"],
-               home="qoder/home", databases=[str(intl), str(china), str(portable), str(legacy)],
-               unsupported=[str(legacy)], agents=dict(intl_agents, **china_agents, **portable_agents),
+               home="qoder/home", databases=[intl.as_posix(), china.as_posix(), portable.as_posix(), legacy.as_posix()],
+               unsupported=[legacy.as_posix()], agents=dict(intl_agents, **china_agents, **portable_agents),
                sessions=dict(intl_sessions, **china_sessions, **portable_sessions))
     for scenario in (one, two):
         scenario["history"] = day_totals([r for v in scenario["agents"].values() for r in v["responses"]])
     # The startup read of a day that starts at 11:00 (window from 10:45): rows 27 and 28, and the times of rows 25
     # and 26 (each session's row just below the window) as the start of their calls.
-    startup = dict(locations=[DATA + "/Qoder"], todayStartMs=at(11, 0, 0), databases=[str(intl)],
+    startup = dict(locations=[DATA + "/Qoder"], todayStartMs=at(11, 0, 0), databases=[intl.as_posix()],
                    agents={k: intl_agents[k] for k in (a + "night-owl", a + "orphan")})
     resolve = {
-        DATA + "/Qoder": str(intl),
-        DATA + "/Qoder/SharedClientCache": str(intl),
-        DATA + "/Qoder/SharedClientCache/cache/db": str(intl),
+        DATA + "/Qoder": intl.as_posix(),
+        DATA + "/Qoder/SharedClientCache": intl.as_posix(),
+        DATA + "/Qoder/SharedClientCache/cache/db": intl.as_posix(),
         DATA + "/Qoder/SharedClientCache/cache": None,
-        DATA + "/" + CN_FOLDER + "/SharedClientCache": str(china),
-        "qoder/portable/user-data": str(portable),
-        "qoder/legacy": str(legacy),
+        DATA + "/" + CN_FOLDER + "/SharedClientCache": china.as_posix(),
+        "qoder/portable/user-data": portable.as_posix(),
+        "qoder/legacy": legacy.as_posix(),
         DATA + "/Qoder/User/globalStorage": None,
         "qoder/missing": None,
     }

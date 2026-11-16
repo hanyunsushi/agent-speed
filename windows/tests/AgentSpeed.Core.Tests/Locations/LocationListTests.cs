@@ -238,7 +238,7 @@ public sealed class LocationListTests : IDisposable
     public void ASymlinkToAListedFolderIsTheSameLocation()
     {
         Directory.CreateDirectory(_temp.Combine("real", "sessions"));
-        Directory.CreateSymbolicLink(_temp.Combine("link"), _temp.Combine("real"));
+        _temp.LinkDirectory(_temp.Combine("link"), _temp.Combine("real"));
         var (lists, outcome) = LocationLists.Automatic.Add(_temp.Combine("real", "sessions"), LocationFolder.Codex, [P("elsewhere")]);
         Assert.Equal(LocationAddOutcome.Added, outcome);
         Assert.Equal(LocationAddOutcome.AlreadyListed, lists.Add(_temp.Combine("link", "sessions"), LocationFolder.Codex, [P("elsewhere")]).Outcome);
@@ -323,7 +323,7 @@ public sealed class LocationListTests : IDisposable
     {
         _temp.WriteFile("a/opencode.db", string.Empty);
         _temp.WriteFile("b/opencode.db", string.Empty);
-        Directory.CreateSymbolicLink(_temp.Combine("c"), _temp.Combine("a"));
+        _temp.LinkDirectory(_temp.Combine("c"), _temp.Combine("a"));
         var locations = SourceLocations.Resolve(Isolated(Lists(LocationFolder.OpenCode,
             At(_temp.Combine("a")), At(_temp.Combine("a", "opencode.db")), At(_temp.Combine("b")), At(_temp.Combine("c")))));
         Assert.Equal([_temp.Combine("a"), _temp.Combine("b")], locations.OpenCodeRoots);

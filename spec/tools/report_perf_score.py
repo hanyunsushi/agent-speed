@@ -757,15 +757,15 @@ LEDGER_CASES = [
          {"at": T + 9000, "response": _resp("a1", "claudeCode", OPUS, 3000, 9000, 300, inp=0, cached=0)},
          {"at": T + 9100, "response": _resp("a2", "codex", GPT, 8900, 9100, 10, first=8950)},
          {"at": T + 10_000, "build": 2}, {"at": T + 15_000, "build": 3}],
-     # a1: [0,4000] adds 4000; [4100,4600] 500; [4100,4700] 100 (covered to 4600); [3000,9000] 9000 − 4700 = 4300.
-     # a2: 200 ms widened to 500: [8600, 9100] adds 500, latency 50 ms -> bucket 0.
+     # a1: decode [1000,4000] adds 3000; calls add 500 + 100; [3000,9000] adds 4300.
+     # a2: decode [8950,9100] adds 150, latency 50 ms -> bucket 0.
      "expect": {"builds": [
-         {"seq": 1, "perfStats": {OPUS: [_row("claudeCode", n=1, output=200, duration=4000, bins=[(13, 1)],
-                                              reason=(1, 50, 4000), cache=(1, 1000, 900),
+         {"seq": 1, "perfStats": {OPUS: [_row("claudeCode", n=1, output=200, duration=3000, bins=[(13, 1)],
+                                              reason=(1, 50, 3000), cache=(1, 1000, 900),
                                               tools=(2, round_half_away(_LN(500) + _LN(600), LN_PLACES), 1),
-                                              active=4600)]}},
-         {"seq": 2, "perfStats": {GPT: [_row("codex", n=1, output=10, duration=500, bins=[(0, 1)],
-                                             reason=(0, 0, 0), cache=(1, 1000, 900), active=500)],
+                                              active=3600)]}},
+         {"seq": 2, "perfStats": {GPT: [_row("codex", n=1, output=10, duration=150, bins=[(0, 1)],
+                                             reason=(0, 0, 0), cache=(1, 1000, 900), active=150)],
                                   OPUS: [_row("claudeCode", n=1, output=300, duration=6000, active=4300)]}},
          {"seq": 3, "perfStats": {}}], "pending": {}}},
     {"name": "history is never counted: a response the report ledger did not count (seeding, older than 2 minutes, "
@@ -858,7 +858,7 @@ def _validation_cases() -> list:
            ["/models/0/perfStats/0/latencyBins"])
     mutate("more latencies than responses", lambda b: row(b).update(latencyBins=[[22, 2], [24, 2]]),
            ["/models/0/perfStats/0/latencyBins"])
-    mutate("durations shorter than 500 ms per response", lambda b: row(b).update(durationMsSum=1499),
+    mutate("durations shorter than 1 ms per response", lambda b: row(b).update(durationMsSum=2),
            ["/models/0/perfStats/0/durationMsSum"])
     mutate("more cached than input tokens", lambda b: row(b).update(cacheCached=800001),
            ["/models/0/perfStats/0/cacheCached"])

@@ -5,6 +5,9 @@
 /artifacts/
 /.claude/
 /request.md
+/agent.md
+/.codegraph/
+/work/
 __pycache__/
 
 # Partner documents for live reporting services, kept local and sent to partners directly

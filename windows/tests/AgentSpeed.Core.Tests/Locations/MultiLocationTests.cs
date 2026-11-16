@@ -116,7 +116,7 @@ public sealed class MultiLocationTests : IDisposable
     {
         var root = _temp.Combine("codex", "sessions");
         CopyCodex(root, Modern);
-        Directory.CreateSymbolicLink(_temp.Combine("link"), root);
+        _temp.LinkDirectory(_temp.Combine("link"), root);
         using var core = Core(Configuration(SourceKind.Codex, LocationFolder.Codex, At(root), At(_temp.Combine("link"))), FixtureDay);
         var report = core.Seed(FixtureNoon, FixtureDay, CancellationToken.None);
         Assert.Equal(1, report.FilesDiscovered);

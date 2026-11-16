@@ -86,6 +86,28 @@ internal sealed class TempDirectory : IDisposable
 
     public string Combine(params string[] parts) => System.IO.Path.Combine([Path, .. parts]);
 
+    // Directory junctions exercise the same reparse-point resolution without requiring Developer Mode or elevation.
+    public void LinkDirectory(string link, string target)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Directory.CreateSymbolicLink(link, target);
+            return;
+        }
+
+        var info = new System.Diagnostics.ProcessStartInfo("cmd.exe")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Arguments = $"/d /c mklink /J \"{link}\" \"{target}\"",
+        };
+        using var process = System.Diagnostics.Process.Start(info)!;
+        process.WaitForExit();
+        Assert.True(process.ExitCode == 0, process.StandardError.ReadToEnd());
+    }
+
     public string WriteFile(string relative, string content)
     {
         var full = Combine(relative.Split('/'));

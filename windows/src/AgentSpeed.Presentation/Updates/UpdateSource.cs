@@ -8,8 +8,8 @@ namespace AgentSpeed.Presentation.Updates;
 /// </summary>
 public sealed class UpdateSource
 {
-    public const string GitHubFeedUrl = "https://api.github.com/repos/zoefix/agent-speed/releases/latest";
-    public const string GitHubReleasesUrl = "https://github.com/zoefix/agent-speed/releases";
+    public const string GitHubFeedUrl = "https://api.github.com/repos/hanyunsushi/agent-speed/releases/latest";
+    public const string GitHubReleasesUrl = "https://github.com/hanyunsushi/agent-speed/releases";
     public const string FeedOverrideVariable = "AGENT_SPEED_UPDATE_FEED";
     public const int MaxRedirects = 5;
 

@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
@@ -135,6 +136,8 @@ jobs:
         run: dotnet test windows/tests/AgentSpeed.TrafficHelper.Tests -c Release
       - name: Test status line helper
         run: dotnet test windows/tests/AgentSpeed.StatuslineHelper.Tests -c Release
+      - name: Test Windows desktop
+        run: dotnet test windows/tests/AgentSpeed.Windows.Tests -c Release
       - name: Publish
         shell: pwsh
         run: ./windows/scripts/publish.ps1

@@ -19,6 +19,9 @@
 
 ## Install
 
+**Windows fork:** see [Windows installation and build instructions](docs/windows-fork.md) for
+`hanyunsushi/agent-speed` packages, decode TPS and TTFT. The commands below refer to upstream releases.
+
 **macOS 14 or later** (Apple Silicon and Intel) **and Linux** (x86_64 and arm64) — paste into Terminal:
 
 ```sh

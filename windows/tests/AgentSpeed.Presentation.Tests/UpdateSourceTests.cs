@@ -5,7 +5,7 @@ namespace AgentSpeed.Presentation.Tests;
 
 public class UpdateSourceTests
 {
-    private static readonly Uri AssetUrl = new("https://github.com/zoefix/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip");
+    private static readonly Uri AssetUrl = new("https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip");
 
     private static UpdateSource Override(string value)
     {
@@ -19,7 +19,7 @@ public class UpdateSourceTests
     {
         var source = UpdateSource.GitHub;
 
-        Assert.Equal("https://api.github.com/repos/zoefix/agent-speed/releases/latest", source.FeedUrl.AbsoluteUri);
+        Assert.Equal("https://api.github.com/repos/hanyunsushi/agent-speed/releases/latest", source.FeedUrl.AbsoluteUri);
         Assert.Equal(UpdateSource.GitHubFeedUrl, source.FeedUrl.OriginalString);
         Assert.False(source.IsOverride);
         Assert.True(UpdateSource.IsAllowedGitHubUrl(source.FeedUrl));
@@ -31,11 +31,11 @@ public class UpdateSourceTests
     }
 
     [Theory]
-    [InlineData("https://github.com/zoefix/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip")]
-    [InlineData("https://api.github.com/repos/zoefix/agent-speed/releases/latest")]
+    [InlineData("https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip")]
+    [InlineData("https://api.github.com/repos/hanyunsushi/agent-speed/releases/latest")]
     [InlineData("https://objects.githubusercontent.com/github-production-release-asset-2e65be/1?X-Amz-Signature=abc")]
     [InlineData("https://release-assets.githubusercontent.com/github-production-release-asset/1/2?sp=r&sv=2018-11-09")]
-    [InlineData("https://GitHub.COM/zoefix/agent-speed")]
+    [InlineData("https://GitHub.COM/hanyunsushi/agent-speed")]
     [InlineData("https://API.GITHUB.COM/repos")]
     [InlineData("HTTPS://github.com/x")]
     [InlineData("https://github.com:443/x")]
@@ -158,17 +158,17 @@ public class UpdateSourceTests
     }
 
     [Theory]
-    [InlineData("/zoefix/agent-speed/releases/download/v1.2.1/AgentSpeed-Windows-x64.zip", "https://github.com/zoefix/agent-speed/releases/download/v1.2.1/AgentSpeed-Windows-x64.zip")]
-    [InlineData("other.zip", "https://github.com/zoefix/agent-speed/releases/download/v1.2.0/other.zip")]
-    [InlineData("../v1.2.1/x.zip", "https://github.com/zoefix/agent-speed/releases/download/v1.2.1/x.zip")]
-    [InlineData("?attempt=2", "https://github.com/zoefix/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip?attempt=2")]
+    [InlineData("/hanyunsushi/agent-speed/releases/download/v1.2.1/AgentSpeed-Windows-x64.zip", "https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.1/AgentSpeed-Windows-x64.zip")]
+    [InlineData("other.zip", "https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.0/other.zip")]
+    [InlineData("../v1.2.1/x.zip", "https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.1/x.zip")]
+    [InlineData("?attempt=2", "https://github.com/hanyunsushi/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip?attempt=2")]
     public void RelativeLocationResolvesAgainstCurrentUrl(string location, string expected)
     {
         Assert.Equal(new Uri(expected), UpdateSource.GitHub.ResolveRedirect(AssetUrl, new Uri(location, UriKind.Relative)));
     }
 
     [Theory]
-    [InlineData("http://github.com/zoefix/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip")]
+    [InlineData("http://github.com/hanyunsushi/agent-speed/releases/download/v1.2.0/AgentSpeed-Windows-x64.zip")]
     [InlineData("http://objects.githubusercontent.com/x")]
     [InlineData("https://evil.example/x.zip")]
     [InlineData("https://github.com.evil.example/x.zip")]
@@ -206,10 +206,10 @@ public class UpdateSourceTests
     [Fact]
     public void ReleasePageMustBeAllowed()
     {
-        var page = "https://github.com/zoefix/agent-speed/releases/tag/v1.2.0";
+        var page = "https://github.com/hanyunsushi/agent-speed/releases/tag/v1.2.0";
         Assert.Equal(new Uri(page), UpdateSource.GitHub.ReleasePage(TestReleases.Release(pageUrl: page)));
         Assert.Null(UpdateSource.GitHub.ReleasePage(TestReleases.Release(pageUrl: "https://evil.example/releases/v1.2.0")));
-        Assert.Null(UpdateSource.GitHub.ReleasePage(TestReleases.Release(pageUrl: "http://github.com/zoefix/agent-speed/releases")));
+        Assert.Null(UpdateSource.GitHub.ReleasePage(TestReleases.Release(pageUrl: "http://github.com/hanyunsushi/agent-speed/releases")));
         Assert.Null(UpdateSource.GitHub.ReleasePage(TestReleases.Release() with { PageUrl = null }));
         Assert.Null(UpdateSource.GitHub.ReleasePage(null));
 

@@ -192,7 +192,7 @@
      "output": 490,
      "reasoning": 0,
      "measuredOutput": 468,
-     "measuredMs": 10100,
+     "measuredMs": 7900,
      "agents": 4,
      "models": {
       "swe-1-6": {
@@ -430,7 +430,7 @@
      "output": 550,
      "reasoning": 0,
      "measuredOutput": 528,
-     "measuredMs": 11600,
+     "measuredMs": 9100,
      "agents": 5,
      "models": {
       "swe-1-6": {

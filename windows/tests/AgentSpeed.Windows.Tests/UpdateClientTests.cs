@@ -15,10 +15,10 @@ public class UpdateClientTests
     private static readonly string Package = UpdatePackage.AssetNameFor(RuntimeInformation.ProcessArchitecture)!;
     private const string Atom = """
         <feed xmlns="http://www.w3.org/2005/Atom">
-          <entry><title>Preview</title><link rel="alternate" href="https://github.com/zoefix/agent-speed/releases/tag/v100.0.0-beta"/></entry>
+          <entry><title>Preview</title><link rel="alternate" href="https://github.com/hanyunsushi/agent-speed/releases/tag/v100.0.0-beta"/></entry>
           <entry>
             <title>Agent Speed 99</title><updated>2026-11-09T00:00:00Z</updated>
-            <link rel="alternate" href="https://github.com/zoefix/agent-speed/releases/tag/v99.0.0"/>
+            <link rel="alternate" href="https://github.com/hanyunsushi/agent-speed/releases/tag/v99.0.0"/>
             <content type="html">&lt;h2&gt;New &amp;amp; improved&lt;/h2&gt;
         &lt;ul&gt;&lt;li&gt;Update checks work&lt;/li&gt;&lt;/ul&gt;</content>
           </entry>

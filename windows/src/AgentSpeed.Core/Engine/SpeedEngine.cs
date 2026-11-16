@@ -1023,9 +1023,9 @@ internal sealed class SpeedEngine
             duration = TimeSpan.FromMilliseconds(interval.DurationMs);
             speed = response.Final ? response.Tokens.Output / (interval.DurationMs / 1000.0) : null;
         }
-        else if (response.StartMs is { } start && response.EndMs >= start)
+        else if (response.StartMs is { } summaryStart && response.EndMs >= summaryStart)
         {
-            duration = TimeSpan.FromMilliseconds(response.EndMs - start);
+            duration = TimeSpan.FromMilliseconds(response.EndMs - summaryStart);
         }
 
         return new ResponseSummary(

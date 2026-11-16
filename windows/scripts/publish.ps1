@@ -13,11 +13,15 @@
 .PARAMETER RelayDir
   Folder with agent-speed-relay-linux-x86_64 and agent-speed-relay-linux-aarch64 of that version (defaults to
   RELAY_DIR, then linux\relay\dist, built by linux/relay/build-static.sh).
+.PARAMETER Architectures
+  Windows architectures to publish. Defaults to both x64 and arm64; use x64 for a local x64-only build.
 #>
 [CmdletBinding()]
 param(
     [string] $Version,
-    [string] $RelayDir
+    [string] $RelayDir,
+    [ValidateSet('x64', 'arm64')]
+    [string[]] $Architectures = @('x64', 'arm64')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -80,7 +84,7 @@ try {
     else {
         # WINDOWS-SERVICE 2: the helper keeps its own version (HelperProtocol.BundledVersion), so no app version is stamped.
         $helperRoot = Join-Path $work 'helper'
-        foreach ($arch in @('x64', 'arm64')) {
+        foreach ($arch in $Architectures) {
             $rid = "win-$arch"
             $helperOut = Join-Path $helperRoot $rid
             Write-Host "==> Publishing the traffic helper (NativeAOT) for $rid"
@@ -102,7 +106,7 @@ try {
         }
         # QUOTAS 5.1: the status line helper, NativeAOT as well, embedded the same way.
         $statuslineRoot = Join-Path $work 'statusline'
-        foreach ($arch in @('x64', 'arm64')) {
+        foreach ($arch in $Architectures) {
             $rid = "win-$arch"
             $statuslineOut = Join-Path $statuslineRoot $rid
             Write-Host "==> Publishing the status line helper (NativeAOT) for $rid"
@@ -124,7 +128,7 @@ try {
         $helperArgs = @("-p:TrafficHelperDir=$helperRoot", "-p:StatuslineHelperDir=$statuslineRoot")
     }
 
-    foreach ($arch in @('x64', 'arm64')) {
+    foreach ($arch in $Architectures) {
         $rid = "win-$arch"
         $out = Join-Path $work $rid
         Write-Host "==> Publishing Agent Speed $Version for $rid"

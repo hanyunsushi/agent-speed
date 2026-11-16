@@ -5,9 +5,9 @@ namespace AgentSpeed.App;
 internal static class AppPaths
 {
     public const string ProductFolder = "AgentSpeed";
-    public const string RepositoryUrl = "https://github.com/zoefix/agent-speed";
-    public const string LicenseUrl = "https://github.com/zoefix/agent-speed/blob/main/LICENSE";
-    public const string ReleasesUrl = "https://github.com/zoefix/agent-speed/releases/latest";
+    public const string RepositoryUrl = "https://github.com/hanyunsushi/agent-speed";
+    public const string LicenseUrl = "https://github.com/hanyunsushi/agent-speed/blob/main/LICENSE";
+    public const string ReleasesUrl = "https://github.com/hanyunsushi/agent-speed/releases/latest";
 
     /// <summary>
     /// The settings file; the developer variable <c>AGENT_SPEED_SETTINGS_FILE</c> (a fully qualified local path) points a test

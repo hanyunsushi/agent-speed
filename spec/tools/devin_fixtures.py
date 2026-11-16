@@ -113,11 +113,11 @@ def write_fixtures(root):
     base = root / "devin"
     cli1 = Path("devin/share/devin/cli/sessions.db")
     cli2 = Path("devin/second/sessions.db")
-    a1 = str(cli1) + "#aurora-lantern"
-    c1 = str(cli1) + "#copper-meadow"
-    q1 = str(cli1) + "#quiet-harbor"
-    o1 = str(cli1) + "#night-owl"
-    n2 = str(cli2) + "#north-wind"
+    a1 = cli1.as_posix() + "#aurora-lantern"
+    c1 = cli1.as_posix() + "#copper-meadow"
+    q1 = cli1.as_posix() + "#quiet-harbor"
+    o1 = cli1.as_posix() + "#night-owl"
+    n2 = cli2.as_posix() + "#north-wind"
 
     # --- Database 1: three sessions with calls, two with titles only -----------------------------------------
     a_first = metrics(1200, 340, 8000, 200, 4200, 1100)
@@ -210,8 +210,8 @@ def write_fixtures(root):
     never.parent.mkdir(parents=True, exist_ok=True)
     never.write_text(desktop_usage_line(), encoding="utf-8")
 
-    scenario_one = dict(locations=["devin/share/devin", "devin/Devin"], databases=[str(cli1)], agents=dict(cli_agents))
-    scenario_two = dict(locations=["devin/share/devin", "devin/second"], databases=[str(cli1), str(cli2)],
+    scenario_one = dict(locations=["devin/share/devin", "devin/Devin"], databases=[cli1.as_posix()], agents=dict(cli_agents))
+    scenario_two = dict(locations=["devin/share/devin", "devin/second"], databases=[cli1.as_posix(), cli2.as_posix()],
                         agents=dict(cli_agents, **second_agents))
     for scenario in (scenario_one, scenario_two):
         scenario["history"] = day_totals(scenario["agents"])
@@ -221,13 +221,13 @@ def write_fixtures(root):
                  "agents not listed have no responses. `history` is the scenario's UTC day totals of the listed "
                  "responses.",
         version=2,
-        resolve={"devin/share/devin": str(cli1), "devin/share/devin/cli": str(cli1), "devin/second": str(cli2),
+        resolve={"devin/share/devin": cli1.as_posix(), "devin/share/devin/cli": cli1.as_posix(), "devin/second": cli2.as_posix(),
                  "devin/Devin": None, "devin/Devin/User/acp-events": None, "devin/missing": None},
         scenarios=dict(one=scenario_one, two=scenario_two))
 
 
 def day_totals(agents):
-    """UTC day totals of the scenario's responses (METRICS 8): measured = final with a valid interval, widened to 500 ms."""
+    """UTC day totals of the scenario's responses (METRICS 8): positive decode intervals, falling back to request start."""
     days = {}
     for agent in agents.values():
         for r in agent["responses"]:
@@ -238,10 +238,12 @@ def day_totals(agents):
             for field in ("input", "cachedInput", "cacheWriteInput", "output", "reasoning"):
                 row[field] += r[field]
             start, end = r["startMs"], r["endMs"]
-            measured = start is not None and 0 <= end - start <= 15 * 60_000
+            first = r.get("firstMs")
+            decode_start = first if first is not None and start is not None and start <= first < end else start
+            measured = start is not None and 0 < end - start <= 15 * 60_000
             if measured:
                 row["measuredOutput"] += r["output"]
-                row["measuredMs"] += max(500, end - start)
+                row["measuredMs"] += end - decode_start
             row["agents"].add(r["agentId"])
             model = row["models"].setdefault(r["model"] or "", dict(requests=0, output=0))
             model["requests"] += 1

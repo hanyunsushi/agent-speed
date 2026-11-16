@@ -1,11 +1,11 @@
 <#
 Agent Speed installer for Windows.
 
-    irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/hanyunsushi/agent-speed/main/install.ps1 | iex
 
 With options:
 
-    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/zoefix/agent-speed/main/install.ps1))) -Uninstall
+    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/hanyunsushi/agent-speed/main/install.ps1))) -Uninstall
 
 Options: -Version vX.Y.Z, -NoLaunch, -NoAutostart, -TrafficHelper, -Uninstall, -Purge
 
@@ -30,7 +30,7 @@ param(
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
 
-    $Repo = 'zoefix/agent-speed'
+    $Repo = 'hanyunsushi/agent-speed'
     $AppName = 'Agent Speed'
     $ExeName = 'AgentSpeed.exe'
     $InstallDir = Join-Path $env:LOCALAPPDATA 'Programs\AgentSpeed'

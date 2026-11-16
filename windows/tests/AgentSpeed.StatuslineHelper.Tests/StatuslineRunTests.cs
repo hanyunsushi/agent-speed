@@ -80,8 +80,11 @@ public sealed class StatuslineRunTests : IDisposable
     public void ThePreviousCommandGetsTheSameInput()
     {
         Directory.CreateDirectory(Path.Combine(_data, "quota"));
+        var command = OperatingSystem.IsWindows()
+            ? "powershell.exe -NoProfile -Command \"[Console]::Write([Console]::In.ReadToEnd())\""
+            : "cat";
         File.WriteAllText(Path.Combine(_data, "quota", "claude-statusline-previous.json"),
-            """{"version":1,"statusLine":{"type":"command","command":"cat","padding":0}}""");
+            System.Text.Json.JsonSerializer.Serialize(new { version = 1, statusLine = new { type = "command", command, padding = 0 } }));
         var (code, output) = Run(WithLimits);
         Assert.Equal(0, code);
         Assert.Equal(WithLimits, output);

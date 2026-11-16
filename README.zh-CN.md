@@ -1,3 +1,5 @@
+> 本 fork 的 Windows 安装、构建与回滚方式见 [Windows fork 说明](docs/windows-fork.md)。Windows 包保留解码 TPS 和独立 TTFT，更新来源为 `hanyunsushi/agent-speed`。
+
 <div align="center">
 
 <img src="assets/icon/icon-1024.png" width="128" alt="Agent Speed 图标">
