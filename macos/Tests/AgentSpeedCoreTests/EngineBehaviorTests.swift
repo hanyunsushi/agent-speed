@@ -89,8 +89,8 @@ struct EngineBehaviorTests {
         #expect(output.agents.map(\.phase) == [.generating, .tools, .idle])
         #expect(output.agents.first?.recentSpeed == 50)
         let busyLive = output.agents.first?.live.output ?? 0
-        #expect(abs(busyLive - 50.0 * 2 / 3) < 1e-9)
-        #expect(output.sourceLive[.codex]?.output == busyLive)
+        #expect(busyLive == 0)
+        #expect((output.sourceLive[.codex]?.output ?? 0) == 0)
     }
 
     @Test func subagentsStayUnderTheirInactiveParents() {
@@ -138,7 +138,7 @@ struct EngineBehaviorTests {
         #expect(output.history.first?.time == Date(timeIntervalSince1970: TimeInterval(Self.base / 1000 - 298)))
     }
 
-    @Test func historyEstimatesStartAfterTheAgentsLatestResponse() {
+    @Test func historyDoesNotExtrapolateAfterTheAgentsLatestResponse() {
         var engine = SpeedEngine()
         let now = Self.base + 10_000
         engine.setAgent(EngineAgent(id: "a1", source: .claudeCode, project: "p", phase: .generating,
@@ -147,11 +147,11 @@ struct EngineBehaviorTests {
                       isCompletion: true, emitsEvents: false)
         let output = engine.advance(nowMs: now, todayStartMs: Self.base - 3_600_000, emitsEvents: false)
         let estimated = output.history.filter { $0.estimated.output > 0 }.map { Int64($0.time.timeIntervalSince1970) }
-        #expect(estimated.first == (Self.base + 6000) / 1000)
+        #expect(estimated.isEmpty)
         #expect(output.history.last?.estimated.output == 0)
     }
 
-    @Test func unfinalizedResponsesAreEstimatedNotMeasured() {
+    @Test func unfinalizedResponsesRemainUnknownUntilFinalUsage() {
         var engine = SpeedEngine()
         let today = Self.base - 3_600_000
         engine.upsert(Self.record("ref", agent: "a1", start: Self.base, end: Self.base + 4000, output: 200), project: "p",
@@ -162,7 +162,7 @@ struct EngineBehaviorTests {
         let output = engine.advance(nowMs: Self.base + 8000, todayStartMs: today, emitsEvents: false)
         let second = { (ms: Int64) in output.history.first { Int64($0.time.timeIntervalSince1970) == ms / 1000 } }
         #expect(second(Self.base + 5000)?.measured.output == 0)
-        #expect(second(Self.base + 5000)?.estimated.output == 50)
+        #expect(second(Self.base + 5000)?.estimated.output == 0)
         #expect(output.unfinalizedToday == 1)
         #expect(output.today.output == 208)
         #expect(output.averageToday == 50)

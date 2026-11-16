@@ -5,6 +5,8 @@ import Foundation
 struct StatusItemState: Equatable {
     var layout: StatusItemLayout
     var ring: Ring
+    var averageRing: Ring = .hidden
+    var averageValue: String = "0"
     var colored: Bool
     var value: String
     var idle: Bool
@@ -14,6 +16,7 @@ struct StatusItemState: Equatable {
     /// The readout blocks (DESIGN 10), each when shown: the network speed, then the intelligence block.
     var traffic: StatusItemTraffic?
     var intelligence: StatusItemIntelligence?
+    var balance: String?
 
     static let glowFade: TimeInterval = 0.35
 
@@ -27,6 +30,16 @@ struct StatusItemState: Equatable {
         layout = StatusItemLayout(model: model, parts: parts, valueWidth: valueWidth ?? StatusItemLayout.valueWidth(of: parts.text))
         colored = model.settings.barColoredGlyph
         ring = layout.showsGlyph ? Ring(gauge: gauge, at: time, colored: colored, flickers: Self.flickers(model)) : .hidden
+        if layout.tokenRings {
+            ring = Ring(fraction: HeatPalette.heat(value: model.snapshot.intervalRates.total.output, redline: model.settings.redline), fillOpacity: 1, glow: 0)
+            averageRing = Ring(fraction: HeatPalette.heat(value: model.snapshot.intervalRates.average.output, redline: model.settings.redline), fillOpacity: 1, glow: 0)
+            averageValue = model.snapshot.intervalRates.sampleCount == 0 ? "—" : SpeedFormat.speed(model.snapshot.intervalRates.average.output)
+        }
+        balance = model.subscriptionBalances.showsMenuBar ? model.subscriptionBalances.menuBarTitle : nil
+        if let balance {
+            layout.balanceWidth = StatusItemLayout.balanceGap +
+                (balance as NSString).size(withAttributes: [.font: StatusItemLayout.balanceFont]).width.rounded(.up)
+        }
         value = parts.text
         idle = gauge.tier == .idle
         increasedContrast = model.accessibility.increaseContrast
@@ -49,7 +62,7 @@ struct StatusItemState: Equatable {
     /// Frames are needed while the ring is shown and its springs move, a glow fades, or the redline flicker runs.
     @MainActor
     static func needsFrames(_ model: AppModel, at time: TimeInterval) -> Bool {
-        guard model.settings.barMode.showsGlyph else { return false }
+        guard model.settings.liveUnit != .tokens, model.settings.barMode.showsGlyph else { return false }
         let gauge = model.gauge
         if flickers(model) && gauge.tier == .redline { return true }
         if time - gauge.tierChangedAt < glowFade { return true }

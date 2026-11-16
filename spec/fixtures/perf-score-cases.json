@@ -698,13 +698,13 @@
      "expect": {
       "a1": {
        "form": "live",
-       "score": 1470.6069795278584,
-       "shown": 1471,
+       "score": 1981.9656084277315,
+       "shown": 1982,
        "provisional": true,
        "n": 5,
        "tools": 4,
-       "activeMs": 22520,
-       "spanStartMs": 1800000000000,
+       "activeMs": 14020,
+       "spanStartMs": 1800000001000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -712,9 +712,9 @@
          "present": true,
          "reason": null,
          "samples": 5,
-         "measure": 50.0,
-         "ratio": 1.0,
-         "subScore": 1000.0
+         "measure": 86.95652173913044,
+         "ratio": 1.7391304347826086,
+         "subScore": 1739.1304347826087
         },
         {
          "id": "L",
@@ -730,18 +730,18 @@
          "present": true,
          "reason": null,
          "samples": 4,
-         "measure": 10.657193605683837,
-         "ratio": 3.552397868561279,
-         "subScore": 3552.3978685612788
+         "measure": 17.118402282453637,
+         "ratio": 5.706134094151213,
+         "subScore": 5706.134094151213
         },
         {
          "id": "R",
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 25.0,
-         "ratio": 1.25,
-         "subScore": 1250.0
+         "measure": 46.15384615384615,
+         "ratio": 2.3076923076923075,
+         "subScore": 2307.6923076923076
         },
         {
          "id": "H",
@@ -772,8 +772,8 @@
         }
        ],
        "baseline": 761.8307762942088,
-       "vsUsual": 0.9303591103018523,
-       "vsUsualPercent": 93
+       "vsUsual": 1.601582490626925,
+       "vsUsualPercent": 160
       }
      }
     },
@@ -783,13 +783,13 @@
      "expect": {
       "a1": {
        "form": "resting",
-       "score": 1470.6069795278584,
-       "shown": 1471,
+       "score": 1981.9656084277315,
+       "shown": 1982,
        "provisional": true,
        "n": 5,
        "tools": 4,
-       "activeMs": 22520,
-       "spanStartMs": 1800000000000,
+       "activeMs": 14020,
+       "spanStartMs": 1800000001000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -797,9 +797,9 @@
          "present": true,
          "reason": null,
          "samples": 5,
-         "measure": 50.0,
-         "ratio": 1.0,
-         "subScore": 1000.0
+         "measure": 86.95652173913044,
+         "ratio": 1.7391304347826086,
+         "subScore": 1739.1304347826087
         },
         {
          "id": "L",
@@ -815,18 +815,18 @@
          "present": true,
          "reason": null,
          "samples": 4,
-         "measure": 10.657193605683837,
-         "ratio": 3.552397868561279,
-         "subScore": 3552.3978685612788
+         "measure": 17.118402282453637,
+         "ratio": 5.706134094151213,
+         "subScore": 5706.134094151213
         },
         {
          "id": "R",
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 25.0,
-         "ratio": 1.25,
-         "subScore": 1250.0
+         "measure": 46.15384615384615,
+         "ratio": 2.3076923076923075,
+         "subScore": 2307.6923076923076
         },
         {
          "id": "H",
@@ -857,8 +857,8 @@
         }
        ],
        "baseline": 761.8307762942088,
-       "vsUsual": 0.9303591103018523,
-       "vsUsualPercent": 93
+       "vsUsual": 1.601582490626925,
+       "vsUsualPercent": 160
       }
      }
     },
@@ -950,7 +950,7 @@
    ]
   },
   {
-   "name": "lower clamps: T at 0.01, U and S at 0.05; L, R and H short of samples; n = 3 is enough",
+   "name": "lower throughput clamp; calls before the decode span are excluded",
    "agents": [
     {
      "id": "c1",
@@ -1038,13 +1038,13 @@
      "expect": {
       "c1": {
        "form": "live",
-       "score": 73.28616209964707,
-       "shown": 73,
+       "score": 10.000000000000005,
+       "shown": 10,
        "provisional": true,
        "n": 3,
-       "tools": 3,
-       "activeMs": 10400,
-       "spanStartMs": 1799999999600,
+       "tools": 0,
+       "activeMs": 2550,
+       "spanStartMs": 1800000000050,
        "model": "gpt-6.1-sol",
        "components": [
         {
@@ -1052,7 +1052,7 @@
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 0.3333333333333333,
+         "measure": 0.3921568627450981,
          "ratio": 0.01,
          "subScore": 10.0
         },
@@ -1067,12 +1067,12 @@
         },
         {
          "id": "N",
-         "present": true,
-         "reason": null,
-         "samples": 3,
-         "measure": 17.307692307692307,
-         "ratio": 5.769230769230769,
-         "subScore": 5769.2307692307695
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         },
         {
          "id": "R",
@@ -1094,21 +1094,21 @@
         },
         {
          "id": "U",
-         "present": true,
-         "reason": null,
-         "samples": 3,
-         "measure": 10000.00000000001,
-         "ratio": 0.05,
-         "subScore": 50.0
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         },
         {
          "id": "S",
-         "present": true,
-         "reason": null,
-         "samples": 3,
-         "measure": 0.0,
-         "ratio": 0.05,
-         "subScore": 50.0
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         }
        ],
        "baseline": null,
@@ -1119,7 +1119,6 @@
     },
     {
      "nowMs": 1800000009999,
-     "note": "the calls end after nowMs: none is in C yet",
      "expect": {
       "c1": {
        "form": "live",
@@ -1128,8 +1127,8 @@
        "provisional": true,
        "n": 3,
        "tools": 0,
-       "activeMs": 3000,
-       "spanStartMs": 1799999999600,
+       "activeMs": 2550,
+       "spanStartMs": 1800000000050,
        "model": "gpt-6.1-sol",
        "components": [
         {
@@ -1137,7 +1136,7 @@
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 0.3333333333333333,
+         "measure": 0.3921568627450981,
          "ratio": 0.01,
          "subScore": 10.0
         },
@@ -2095,13 +2094,13 @@
      "expect": {
       "d1": {
        "form": "resting",
-       "score": 10449.172621578484,
-       "shown": 10449,
+       "score": 10629.952904173753,
+       "shown": 10630,
        "provisional": false,
        "n": 20,
        "tools": 60,
-       "activeMs": 906000,
-       "spanStartMs": 1800000010000,
+       "activeMs": 905700,
+       "spanStartMs": 1800000010100,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -2109,9 +2108,9 @@
          "present": true,
          "reason": null,
          "samples": 20,
-         "measure": 5500.0,
-         "ratio": 110.0,
-         "subScore": 110000.0
+         "measure": 5789.473684210527,
+         "ratio": 115.78947368421053,
+         "subScore": 115789.47368421053
         },
         {
          "id": "L",
@@ -2127,9 +2126,9 @@
          "present": true,
          "reason": null,
          "samples": 60,
-         "measure": 3.9735099337748347,
-         "ratio": 1.3245033112582782,
-         "subScore": 1324.5033112582782
+         "measure": 3.9748261013580652,
+         "ratio": 1.3249420337860218,
+         "subScore": 1324.9420337860217
         },
         {
          "id": "R",
@@ -2177,7 +2176,7 @@
    ]
   },
   {
-   "name": "upper clamps: N at 20; a 10 ms call counts as 50 ms; a cache hit of 0 at the 0.05 floor",
+   "name": "decode excludes first-content latency and calls before the span; cache at its floor",
    "agents": [
     {
      "id": "e1",
@@ -2321,13 +2320,13 @@
      "expect": {
       "e1": {
        "form": "live",
-       "score": 4480.836176256561,
-       "shown": 4481,
+       "score": 5604.167068884799,
+       "shown": 5604,
        "provisional": true,
        "n": 3,
-       "tools": 10,
-       "activeMs": 1500,
-       "spanStartMs": 1800000000000,
+       "tools": 0,
+       "activeMs": 600,
+       "spanStartMs": 1800000000300,
        "model": "gpt-6.1-sol",
        "components": [
         {
@@ -2335,9 +2334,9 @@
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 200.0,
-         "ratio": 4.0,
-         "subScore": 4000.0
+         "measure": 500.0,
+         "ratio": 10.0,
+         "subScore": 10000.0
         },
         {
          "id": "L",
@@ -2350,21 +2349,21 @@
         },
         {
          "id": "N",
-         "present": true,
-         "reason": null,
-         "samples": 10,
-         "measure": 400.0,
-         "ratio": 20.0,
-         "subScore": 20000.0
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         },
         {
          "id": "R",
          "present": true,
          "reason": null,
          "samples": 3,
-         "measure": 100.0,
-         "ratio": 5.0,
-         "subScore": 5000.0
+         "measure": 250.0,
+         "ratio": 12.5,
+         "subScore": 12500.0
         },
         {
          "id": "H",
@@ -2377,21 +2376,21 @@
         },
         {
          "id": "U",
-         "present": true,
-         "reason": null,
-         "samples": 10,
-         "measure": 49.99999999999997,
-         "ratio": 8.000000000000005,
-         "subScore": 8000.0000000000055
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         },
         {
          "id": "S",
-         "present": true,
-         "reason": null,
-         "samples": 10,
-         "measure": 1.0,
-         "ratio": 1.0526315789473684,
-         "subScore": 1052.6315789473683
+         "present": false,
+         "reason": "fewSamples",
+         "samples": 0,
+         "measure": null,
+         "ratio": null,
+         "subScore": null
         }
        ],
        "baseline": null,
@@ -2478,13 +2477,13 @@
      "expect": {
       "f1": {
        "form": "live",
-       "score": 301.70881682725815,
-       "shown": 302,
+       "score": 663.7108510081546,
+       "shown": 664,
        "provisional": true,
        "n": 4,
        "tools": 0,
-       "activeMs": 1600000,
-       "spanStartMs": 1800000000000,
+       "activeMs": 430000,
+       "spanStartMs": 1800000200000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -2492,9 +2491,9 @@
          "present": true,
          "reason": null,
          "samples": 4,
-         "measure": 50.0,
-         "ratio": 1.0,
-         "subScore": 1000.0
+         "measure": 186.04651162790697,
+         "ratio": 3.7209302325581395,
+         "subScore": 3720.9302325581393
         },
         {
          "id": "L",
@@ -3118,13 +3117,13 @@
      "expect": {
       "p1": {
        "form": "resting",
-       "score": 1903.6539387158787,
-       "shown": 1904,
+       "score": 2885.399811814427,
+       "shown": 2885,
        "provisional": false,
        "n": 10,
        "tools": 0,
-       "activeMs": 20000,
-       "spanStartMs": 1800000000000,
+       "activeMs": 10000,
+       "spanStartMs": 1800000001000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -3132,9 +3131,9 @@
          "present": true,
          "reason": null,
          "samples": 10,
-         "measure": 50.0,
-         "ratio": 1.0,
-         "subScore": 1000.0
+         "measure": 100.0,
+         "ratio": 2.0,
+         "subScore": 2000.0
         },
         {
          "id": "L",
@@ -3202,13 +3201,13 @@
      "expect": {
       "p1": {
        "form": "resting",
-       "score": 1903.6539387158787,
-       "shown": 1904,
+       "score": 2885.399811814427,
+       "shown": 2885,
        "provisional": true,
        "n": 9,
        "tools": 0,
-       "activeMs": 18000,
-       "spanStartMs": 1800000005000,
+       "activeMs": 9000,
+       "spanStartMs": 1800000006000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -3216,9 +3215,9 @@
          "present": true,
          "reason": null,
          "samples": 9,
-         "measure": 50.0,
-         "ratio": 1.0,
-         "subScore": 1000.0
+         "measure": 100.0,
+         "ratio": 2.0,
+         "subScore": 2000.0
         },
         {
          "id": "L",
@@ -3292,8 +3291,8 @@
        "provisional": false,
        "n": 1,
        "tools": 0,
-       "activeMs": 2000,
-       "spanStartMs": 1800000000000,
+       "activeMs": 1000,
+       "spanStartMs": 1800000001000,
        "model": "claude-opus-5-5",
        "components": [
         {
@@ -3870,7 +3869,7 @@
      "model": "claude-opus-5-5",
      "n": 2,
      "outputSum": 700,
-     "durationMsSum": 7000,
+     "durationMsSum": 5800,
      "latencyBins": [
       0,
       0,
@@ -3939,14 +3938,14 @@
      ],
      "reasonN": 1,
      "reasonOutput": 100,
-     "reasonDurationMsSum": 4000,
+     "reasonDurationMsSum": 3000,
      "cacheN": 2,
      "cacheInput": 3000,
      "cacheCached": 1900,
      "toolN": 3,
      "toolLnSum": 23.667704816112852,
      "toolFailed": 1,
-     "activeMs": 8500
+     "activeMs": 7500
     },
     {
      "day": "2027-01-15",
@@ -3954,7 +3953,7 @@
      "model": "claude-sonnet-5-5",
      "n": 1,
      "outputSum": 100,
-     "durationMsSum": 2000,
+     "durationMsSum": 500,
      "latencyBins": [
       0,
       0,
@@ -4030,7 +4029,7 @@
      "toolN": 0,
      "toolLnSum": 0.0,
      "toolFailed": 0,
-     "activeMs": 2000
+     "activeMs": 500
     },
     {
      "day": "2027-01-15",
@@ -4122,7 +4121,7 @@
      "model": "claude-opus-5-5",
      "n": 1,
      "outputSum": 80,
-     "durationMsSum": 2000,
+     "durationMsSum": 1850,
      "latencyBins": [
       0,
       0,
@@ -4198,7 +4197,7 @@
      "toolN": 0,
      "toolLnSum": 0.0,
      "toolFailed": 0,
-     "activeMs": 2000
+     "activeMs": 1850
     }
    ]
   }
@@ -7780,7 +7779,7 @@
     ]
    },
    {
-    "name": "an in-flight agent is estimated with its reference set's speed and thinking share",
+    "name": "an in-flight agent contributes no predicted thinking",
     "agents": [
      {
       "id": "a1",
@@ -7825,9 +7824,9 @@
      {
       "nowMs": 1000000012000,
       "expect": {
-       "liveThinking": 16.666666666666668,
-       "thinkingShare": 0.3333333333333333,
-       "weight": 150.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       }
      }
     ]
@@ -7921,9 +7920,9 @@
      {
       "nowMs": 1000000006000,
       "expect": {
-       "liveThinking": 50.0,
-       "thinkingShare": 0.5,
-       "weight": 300.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       }
      }
     ]
@@ -8037,15 +8036,15 @@
      {
       "nowMs": 1000000005000,
       "expect": {
-       "liveThinking": 25.0,
+       "liveThinking": 16.666666666666668,
        "thinkingShare": 0.25,
-       "weight": 300.0
+       "weight": 200.0
       },
       "agents": {
        "a1": {
-        "liveThinking": 25.0,
+        "liveThinking": 16.666666666666668,
         "thinkingShare": 0.25,
-        "weight": 300.0
+        "weight": 200.0
        },
        "a2": {
         "liveThinking": 0.0,
@@ -8062,15 +8061,15 @@
      {
       "nowMs": 1000000009000,
       "expect": {
-       "liveThinking": 25.0,
-       "thinkingShare": 0.25,
-       "weight": 300.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       },
       "agents": {
        "a1": {
-        "liveThinking": 25.0,
-        "thinkingShare": 0.25,
-        "weight": 300.0
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
        },
        "a2": {
         "liveThinking": 0.0,
@@ -8250,29 +8249,9 @@
      {
       "nowMs": 1000000003000,
       "expect": {
-       "liveThinking": 30.0,
-       "thinkingShare": 0.3,
-       "weight": 300.0
-      },
-      "agents": {
-       "c1": {
-        "liveThinking": 16.666666666666668,
-        "thinkingShare": 0.25,
-        "weight": 200.0
-       },
-       "c2": {
-        "liveThinking": 13.333333333333334,
-        "thinkingShare": 0.4,
-        "weight": 100.0
-       }
-      }
-     },
-     {
-      "nowMs": 1000000007000,
-      "expect": {
-       "liveThinking": 20.0,
-       "thinkingShare": 0.4,
-       "weight": 150.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       },
       "agents": {
        "c1": {
@@ -8281,9 +8260,29 @@
         "weight": 0.0
        },
        "c2": {
-        "liveThinking": 20.0,
-        "thinkingShare": 0.4,
-        "weight": 150.0
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
+       }
+      }
+     },
+     {
+      "nowMs": 1000000007000,
+      "expect": {
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
+      },
+      "agents": {
+       "c1": {
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
+       },
+       "c2": {
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
        }
       }
      }
@@ -8332,15 +8331,15 @@
      {
       "nowMs": 1000000003000,
       "expect": {
-       "liveThinking": 25.0,
-       "thinkingShare": 0.25,
-       "weight": 300.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       },
       "agents": {
        "f1": {
-        "liveThinking": 25.0,
-        "thinkingShare": 0.25,
-        "weight": 300.0
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
        },
        "f2": {
         "liveThinking": 0.0,
@@ -8622,9 +8621,9 @@
      {
       "nowMs": 1000000003000,
       "expect": {
-       "liveThinking": 16.666666666666668,
-       "thinkingShare": 0.25,
-       "weight": 200.0
+       "liveThinking": 0.0,
+       "thinkingShare": 0.0,
+       "weight": 0.0
       },
       "groups": {
        "p1": {
@@ -8632,9 +8631,9 @@
          "p1",
          "q1"
         ],
-        "liveThinking": 16.666666666666668,
-        "thinkingShare": 0.25,
-        "weight": 200.0
+        "liveThinking": 0.0,
+        "thinkingShare": 0.0,
+        "weight": 0.0
        },
        "o1": {
         "members": [
@@ -8874,9 +8873,9 @@
      {
       "nowMs": 1000000005000,
       "expect": {
-       "liveThinking": 25.0,
+       "liveThinking": 16.666666666666668,
        "thinkingShare": 0.25,
-       "weight": 500.0
+       "weight": 400.0
       },
       "models": {
        "gpt-5.5": {
@@ -8888,11 +8887,6 @@
         "liveThinking": 0.0,
         "thinkingShare": 0.0,
         "weight": 200.0
-       },
-       "gpt-5.5-codex": {
-        "liveThinking": 8.333333333333334,
-        "thinkingShare": 0.25,
-        "weight": 100.0
        }
       }
      }
@@ -9057,16 +9051,16 @@
     },
     "models": [
      {
-      "model": "gpt-6.1-sol",
-      "speed": 106.0,
+      "model": "claude-opus-5-5",
+      "speed": 160.0,
       "agents": 1,
-      "shown": 106
+      "shown": 160
      },
      {
-      "model": "claude-opus-5-5",
-      "speed": 100.0,
+      "model": "gpt-6.1-sol",
+      "speed": 151.42857142857142,
       "agents": 1,
-      "shown": 100
+      "shown": 151
      }
     ]
    }
@@ -9212,9 +9206,9 @@
     "models": [
      {
       "model": "claude-opus-5-5",
-      "speed": 120.0,
+      "speed": 160.0,
       "agents": 2,
-      "shown": 120
+      "shown": 160
      },
      {
       "model": "gemini-4-argon",

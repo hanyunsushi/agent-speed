@@ -61,6 +61,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             || !(event?.modifierFlags.intersection([.option, .control]).isEmpty ?? true)
         if isSecondary {
             scheduleQuickMenu()
+        } else if let event, let layout = renderer?.state(at: Clock.now).layout,
+                  layout.balanceWidth > 0,
+                  sender.convert(event.locationInWindow, from: nil).x >= layout.balanceX,
+                  sender.convert(event.locationInWindow, from: nil).x < layout.balanceX + layout.balanceWidth {
+            model.showSubscriptionBalances?()
         } else {
             model.commands?.toggleDashboard()
             reapplyHighlightAfterTracking()

@@ -1,3 +1,4 @@
+using AgentSpeed.Core.Telemetry;
 using AgentSpeed.Core.History;
 using AgentSpeed.Core.Intelligence;
 using AgentSpeed.Core.Parsing;
@@ -134,6 +135,12 @@ internal sealed class SpeedEngine
             response = response with { FirstMs = heldFirst };
         }
 
+        if (current?.Response != response)
+        {
+            var oldMeasured = current?.Response is { Final: true } old && old.Tokens.Output > 0 && SpeedMath.TryGetSpeedInterval(old, out _);
+            var newMeasured = response.Final && response.Tokens.Output > 0 && SpeedMath.TryGetSpeedInterval(response, out _);
+            if (oldMeasured || newMeasured) _intervalRatesDirty = true;
+        }
         _responses[response.Key] = new Stored(response);
         Spent?.Invoke(response);
         if (response.Provider is { } provider)
@@ -188,6 +195,7 @@ internal sealed class SpeedEngine
     /// <summary>A host removed from the settings: its agents and responses leave every live value.</summary>
     public void RemoveHost(string host)
     {
+        _intervalRates = MeasuredRateWindow.Empty;
         foreach (var id in _agents.Where(a => a.Value.Host == host).Select(a => a.Key).ToList())
         {
             _agents.Remove(id);
@@ -201,6 +209,7 @@ internal sealed class SpeedEngine
         foreach (var key in _today.KeysOf(host))
         {
             _today.Remove(key);
+            _intervalRatesDirty = true;
         }
 
         _completions.RemoveAll(r => r.Host == host);
@@ -258,6 +267,14 @@ internal sealed class SpeedEngine
         }
     }
 
+    private MeasuredRateWindow _intervalRates = MeasuredRateWindow.Empty;
+    private bool _intervalRatesDirty;
+    private IReadOnlyList<CodexMeasurement> _codexMeasurements = [];
+    public void SetCodexMeasurements(IReadOnlyList<CodexMeasurement> samples)
+    {
+        if (!_codexMeasurements.SequenceEqual(samples)) { _codexMeasurements = samples; _intervalRatesDirty = true; }
+    }
+
     public EngineFrame Compute(long nowMs, long todayStartMs, bool observeLive)
     {
         if (todayStartMs != _today.StartMs)
@@ -290,7 +307,6 @@ internal sealed class SpeedEngine
         }
 
         var valid = new List<Stored>(_responses.Count);
-        var unmeasured = new List<Stored>();
         var latestEnd = new Dictionary<string, long>(StringComparer.Ordinal);
         foreach (var stored in _responses.Values)
         {
@@ -307,7 +323,6 @@ internal sealed class SpeedEngine
 
             if (!stored.Response.Final)
             {
-                unmeasured.Add(stored);
                 continue;
             }
 
@@ -342,70 +357,19 @@ internal sealed class SpeedEngine
             ? b.Response.EndMs.CompareTo(a.Response.EndMs)
             : string.CompareOrdinal(a.Response.Key, b.Response.Key));
 
+        if (MeasuredRateWindow.Measure(_responses.Values.Select(s => s.Response), nowMs, _codexMeasurements) is { } measuredRates
+            && (_intervalRatesDirty || _intervalRates.EndedAtMs is null || measuredRates.EndedAtMs > _intervalRates.EndedAtMs))
+        {
+            _intervalRates = measuredRates;
+        }
+        // Retention alone must not change the held interval during an idle gap.
+        _intervalRatesDirty = false;
         var recent = RecentSpeeds(valid, nowMs);
         var estimated = new Accumulator(SourceCount);
         var estimates = new List<(long StartMs, long EndMs, SpeedPair Speed)>();
 
-        void AddEstimate(SourceKind source, string host, string agentId, SpeedPair reference, long overlap, string? model, string? provider)
-        {
-            var output = reference.Output * overlap / 1000.0;
-            estimated.Add(source, agentId, output, reference.Total * overlap / 1000.0);
-            if (reference.CostRate is { } rate)
-            {
-                sourceCosts[(int)source] += new LiveCost(rate * overlap / 1000.0, output);
-            }
-
-            AddIntelligence(source, agentId, output, output * reference.ThinkingShare, model, provider);
-            if (cells is not null)
-            {
-                var cell = new HostSource(host, source);
-                cells.Add(cell, output, reference.Total * overlap / 1000.0, estimated: true);
-                cells.AddIntelligence(cell, output, output * reference.ThinkingShare);
-                if (reference.CostRate is { } cellRate)
-                {
-                    cells.AddCost(cell, new LiveCost(cellRate * overlap / 1000.0, output));
-                }
-            }
-        }
-
-        // Unfinalized usage: the time is real, the token count is not, so it is estimated (METRICS 6.3).
-        foreach (var stored in unmeasured)
-        {
-            var response = stored.Response;
-            var owner = _agents.TryGetValue(response.AgentId, out var known)
-                ? known
-                : new AgentInfo(response.AgentId, response.Source, null, response.Model, false, AgentPhase.Idle, null, null);
-            SpeedPair? speed = recent.TryGetValue(owner.Id, out var ownSpeed) ? ownSpeed : Fallback(valid, nowMs, owner);
-            if (speed is not { } reference)
-            {
-                continue;
-            }
-
-            estimates.Add((stored.Interval.StartMs, stored.Interval.EndMs, reference));
-            var overlap = SpeedMath.Overlap(windowStart, nowMs, stored.Interval.StartMs, stored.Interval.EndMs);
-            AddEstimate(response.Source, response.Host, response.AgentId, reference, overlap, response.Model, response.Provider);
-        }
-
-        foreach (var agent in _agents.Values)
-        {
-            if (agent.Phase != AgentPhase.Generating || agent.InFlightStartMs is not { } start
-                || agent.LastLineMs is not { } last || nowMs - last > StaleMs)
-            {
-                continue;
-            }
-
-            SpeedPair? speed = recent.TryGetValue(agent.Id, out var own) ? own : Fallback(valid, nowMs, agent);
-            if (speed is not { } estimate)
-            {
-                continue;
-            }
-
-            // Never estimate over the agent's own (possibly still streaming) responses.
-            var estimateStart = latestEnd.TryGetValue(agent.Id, out var ownEnd) ? Math.Max(start, ownEnd) : start;
-            estimates.Add((estimateStart, nowMs, estimate));
-            var overlap = SpeedMath.Overlap(windowStart, nowMs, estimateStart, nowMs);
-            AddEstimate(agent.Source, agent.Host, agent.Id, estimate, overlap, agent.Model, _agentProviders.GetValueOrDefault(agent.Id));
-        }
+        // Only finalized usage with a valid measured interval contributes.
+        // No historical/model/source rate is substituted for missing observations.
 
         var seconds = WindowMs / 1000.0;
         var live = new Rate((measured.Output + estimated.Output) / seconds, (measured.Total + estimated.Total) / seconds);
@@ -463,10 +427,11 @@ internal sealed class SpeedEngine
             generating,
             tools,
             history,
-            _last is null ? null : Summarize(_last),
+            _last is null ? null : MeasuredSummary(_last),
             events,
             _today.UnfinalizedCount)
         {
+            IntervalRates = _intervalRates,
             LiveCost = liveCost,
             SourceLiveCost = sourceLiveCost,
             TodayCost = _today.Cost,
@@ -1013,6 +978,16 @@ internal sealed class SpeedEngine
         return (new Rate(output, Math.Max(bucketTotal, _liveMaxTotal)), at);
     }
 
+    private ResponseSummary MeasuredSummary(ParsedResponse response)
+    {
+        var summary = Summarize(response);
+        if (response.Source != SourceKind.Codex) return summary;
+        var sample = _codexMeasurements.FirstOrDefault(s => s.Matches(response));
+        return summary with { TtftMs = sample is null ? null : (long)Math.Round(sample.TtftMs),
+            Duration = sample is null ? null : TimeSpan.FromMilliseconds(sample.DurationMs),
+            Speed = sample?.DecodeMs is { } ms ? (sample.Output - 1) * 1000.0 / ms : null };
+    }
+
     private ResponseSummary Summarize(ParsedResponse response)
     {
         var project = _agents.TryGetValue(response.AgentId, out var agent) ? agent.Project ?? string.Empty : string.Empty;
@@ -1037,7 +1012,7 @@ internal sealed class SpeedEngine
             duration,
             speed,
             UnixTime.FromMs(response.EndMs),
-            response.StartMs is { } start && response.FirstMs is { } first && first >= start ? first - start : null)
+            response.StartMs is { } requestStart && response.FirstMs is { } first && first >= requestStart && first <= response.EndMs ? first - requestStart : null)
         { Host = response.Host };
     }
 

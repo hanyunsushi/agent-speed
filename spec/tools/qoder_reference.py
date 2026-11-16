@@ -354,7 +354,7 @@ def contributions(agents):
 
 
 def day_totals(responses):
-    """UTC day totals of responses (METRICS 8): measured = final with a valid interval, widened to 500 ms."""
+    """UTC day totals of responses (METRICS 8): measured = final with a valid interval, using the observed decode interval."""
     days = {}
     for r in responses:
         day = datetime.fromtimestamp(r["endMs"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
@@ -364,9 +364,12 @@ def day_totals(responses):
         for field in ("input", "cachedInput", "cacheWriteInput", "output", "reasoning"):
             row[field] += r[field]
         start, end = r["startMs"], r["endMs"]
-        if start is not None and 0 <= end - start <= 15 * 60_000:
+        valid = start is not None and 0 < end - start <= 15 * 60_000
+        first = r.get("firstMs")
+        decode_start = first if valid and first is not None and start <= first < end else start
+        if valid and r.get("final", True):
             row["measuredOutput"] += r["output"]
-            row["measuredMs"] += max(500, end - start)
+            row["measuredMs"] += end - decode_start
         row["agents"].add(r["agentId"])
         model = row["models"].setdefault(r["model"] or "", dict(requests=0, output=0))
         model["requests"] += 1

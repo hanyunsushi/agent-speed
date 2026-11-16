@@ -158,7 +158,7 @@ public sealed class EngineBehaviorTests
     }
 
     [Theory]
-    [InlineData(true, 100.0)]
+    [InlineData(true, 100.0 / 3)]
     [InlineData(false, 100.0 / 3)]
     public void PeakIncludesObservedLiveValueOnlyWhileObserving(bool observeLive, double expectedPeak)
     {
@@ -169,13 +169,13 @@ public sealed class EngineBehaviorTests
 
         var frame = engine.Compute(b + 4000, 0, observeLive);
 
-        AssertClose(100, frame.Live.Output, "live");
-        AssertClose(1, frame.EstimatedShare, "share");
+        AssertClose(0, frame.Live.Output, "live");
+        AssertClose(0, frame.EstimatedShare, "share");
         AssertClose(expectedPeak, frame.PeakToday.Output, "peak");
         var estimated = frame.History.ToDictionary(p => p.Time.ToUnixTimeMilliseconds(), p => p.Estimated.Output);
         AssertClose(0, estimated[b], "estimated history before start");
-        AssertClose(100, estimated[b + 1000], "estimated history");
-        AssertClose(100, estimated[b + 3000], "estimated history");
+        AssertClose(0, estimated[b + 1000], "estimated history");
+        AssertClose(0, estimated[b + 3000], "estimated history");
         AssertClose(0, estimated[b + 4000], "estimated history at now");
     }
 

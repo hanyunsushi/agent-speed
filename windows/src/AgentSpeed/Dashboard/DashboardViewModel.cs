@@ -451,7 +451,8 @@ internal sealed partial class DashboardViewModel : ObservableObject
         Localizer loc, bool darkTheme)
     {
         var unit = loc["unit.tokS"];
-        ValueText = SpeedFormat.Speed(value);
+        value = snapshot.IntervalRates.Total.Output;
+        ValueText = snapshot.IntervalRates.SampleCount > 0 ? SpeedFormat.Speed(value) : "—";
         UnitText = unit;
         TitleLevelIndex = (int)title;
         TitleText = TitleTheme.Label(title, loc);
@@ -460,7 +461,10 @@ internal sealed partial class DashboardViewModel : ObservableObject
             ? HeatPalette.Stops[0].Color
             : darkTheme ? HeatPalette.Sample(Math.Max(heat, 0.08)) : OrbTokens.Light.TierLabel(Math.Max(heat, 0.08));
         TitleBrush = MediaColors.Frozen(titleColor.ToColor());
-        ContextText = DisplayText.AgentContext(snapshot, loc);
+        var latency = snapshot.LastResponse?.TtftMs is { } ttft
+            ? (ttft < 1000 ? $"{ttft}ms" : $"{ttft / 1000.0:F2}s") : "—";
+        ContextText = DisplayText.AgentContext(snapshot, loc)
+            + $" · 30s Avg {SpeedFormat.Speed(snapshot.IntervalRates.Average.Output)} tok/s · TTFT {latency}";
         HeroAccessibleName = DisplayText.Accessibility(value, TitleTheme.Text(title, loc), loc);
         var money = LiveUnit == LiveUnit.Cost ? Cost?.Live(snapshot) : null;
         HeroIsMoney = money is not null;

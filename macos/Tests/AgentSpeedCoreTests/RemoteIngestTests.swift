@@ -93,7 +93,7 @@ struct RemoteIngestTests {
         let harness = try Harness()
         harness.send(L.seeding(L.a, connection: 3, Self.seedingLines(generating: true)))
         let (before, _) = harness.sink.establish()
-        #expect((before.sourceLiveEstimated[.codex]?.output ?? 0) > 0, "the in-flight estimate runs while connected")
+        #expect((before.sourceLiveEstimated[.codex]?.output ?? 0) == 0, "connected does not imply measured output")
 
         harness.send([L.status(L.a, 3, .unreachable)])
         let agent = try #require(harness.engineAgents[L.agentId(L.a, "a")])

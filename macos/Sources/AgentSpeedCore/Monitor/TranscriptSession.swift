@@ -825,6 +825,7 @@ final class TranscriptSession {
             parentLinksAreStale = false
             remoteParentsChanged = false
         }
+        if enabledSources.contains(.codex) { engine.setCodexMeasurements(CodexTelemetry.shared.samples) }
         let output = engine.advance(nowMs: nowMs, todayStartMs: todayStartMs, emitsEvents: emitsEvents, subsets: subsets)
         let events = pendingEvents + output.events
         pendingEvents.removeAll()

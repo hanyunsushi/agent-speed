@@ -829,6 +829,7 @@ internal sealed partial class MonitorCore : IDisposable
     {
         ResolveParents();
         _engine.FollowPerfWatch(PerfWatch);
+        if (_enabled.Contains(SourceKind.Codex)) _engine.SetCodexMeasurements(Telemetry.CodexTelemetry.Shared.Samples);
         var frame = _engine.Compute(nowMs, todayStartMs, observeLive);
         var agents = frame.Agents
             .Select(a => new AgentStatus(
@@ -886,6 +887,7 @@ internal sealed partial class MonitorCore : IDisposable
             DayStart = DateTimeOffset.FromUnixTimeMilliseconds(todayStartMs),
             LiveCost = frame.LiveCost,
             TodayCost = frame.TodayCost,
+            IntervalRates = frame.IntervalRates,
             Report = frame.Report,
             TodayModes = frame.TodayModes,
             ObservedAtMs = _observedAtMs,

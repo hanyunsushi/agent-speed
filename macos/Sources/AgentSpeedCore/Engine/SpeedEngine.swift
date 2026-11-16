@@ -23,6 +23,12 @@ struct SpeedEngine: Sendable {
     private var projects: [String: String] = [:]
     private var ledger: DayLedger?
     private var lastResponse: ResponseSummary?
+    private var intervalRates = MeasuredRateWindow.empty
+    private var intervalRatesDirty = false
+    private var codexMeasurements: [CodexMeasurement] = []
+    mutating func setCodexMeasurements(_ samples: [CodexMeasurement]) {
+        if samples != codexMeasurements { codexMeasurements = samples; intervalRatesDirty = true }
+    }
     private var observedPeak = Rate.zero
     private var observedPeakAtMs: Int64?
     private var previousPeakOutput = 0.0
@@ -97,6 +103,11 @@ struct SpeedEngine: Sendable {
                 ? pricing.cost(of: record, day: dayLabeler.label(forMs: record.endMs)) : nil
         }
         let old = responses.updateValue(record, forKey: record.key)
+        if old != record {
+            let oldMeasured = old.map { $0.isFinal && $0.usage.output > 0 && TimedResponse($0) != nil } ?? false
+            let newMeasured = record.isFinal && record.usage.output > 0 && TimedResponse(record) != nil
+            if oldMeasured || newMeasured { intervalRatesDirty = true }
+        }
         projects[record.key] = project
         ledger?.replace(old, with: record)
         spendSink?.spend(record)
@@ -145,6 +156,23 @@ struct SpeedEngine: Sendable {
         )
         let history = Self.history(nowMs: nowMs, measured: measured, estimates: window.estimates)
 
+        if let measuredRates = MeasuredRateWindow.measure(Array(responses.values), nowMs: nowMs, codex: codexMeasurements),
+           intervalRatesDirty || (measuredRates.endedAtMs ?? .min) > (intervalRates.endedAtMs ?? .min) {
+            intervalRates = measuredRates
+        }
+        // Retention alone must not change the held interval during an idle gap.
+        intervalRatesDirty = false
+        if let summary = lastResponse, summary.source == .codex {
+            lastResponse?.ttftMs = nil
+            lastResponse?.speed = nil
+            lastResponse?.duration = nil
+            if let record = responses.values.first(where: { $0.source == .codex && $0.endMs == Int64((summary.endedAt.timeIntervalSince1970 * 1000).rounded()) && $0.usage.output == summary.outputTokens }),
+               let sample = codexMeasurements.first(where: { $0.matches(record) }) {
+                lastResponse?.ttftMs = Int64(sample.ttftMs.rounded())
+                lastResponse?.duration = sample.durationMs / 1000
+                lastResponse?.speed = sample.decodeMs.map { Double(sample.output - 1) * 1000 / $0 }
+            }
+        }
         let live = window.total
         if live.output > observedPeak.output {
             observedPeak.output = live.output
@@ -182,6 +210,7 @@ struct SpeedEngine: Sendable {
         return EngineOutput(
             nowMs: nowMs,
             live: live,
+            intervalRates: intervalRates,
             liveEstimatedShare: window.estimatedShare,
             sourceLive: window.bySource,
             sourceLiveEstimated: window.estimatedBySource,
@@ -347,6 +376,7 @@ struct SpeedEngine: Sendable {
 
     /// A host removed from the settings: its agents and responses leave every live value.
     mutating func removeHost(_ host: String) {
+        intervalRates = .empty
         for (id, agent) in agents where agent.host == host { agents[id] = nil }
         for (key, record) in responses where record.host == host { removeResponse(key) }
         remoteResponseCounts[host] = nil
@@ -354,6 +384,7 @@ struct SpeedEngine: Sendable {
 
     private mutating func removeResponse(_ key: String) {
         guard let old = responses.removeValue(forKey: key) else { return }
+        intervalRatesDirty = true
         projects[key] = nil
         ledger?.replace(old, with: nil)
     }
@@ -582,7 +613,7 @@ struct SpeedEngine: Sendable {
             endedAt: Date(timeIntervalSince1970: TimeInterval(record.endMs) / 1000),
             host: record.host,
             ttftMs: record.startMs.flatMap { start in
-                guard let first = record.firstMs, first >= start else { return nil }
+                guard let first = record.firstMs, first >= start, first <= record.endMs else { return nil }
                 return first - start
             }
         )

@@ -14,7 +14,15 @@ internal static class AppMenu
     /// <param name="sourceTraffic">Per-process traffic can be measured now (DESIGN 10).</param>
     /// <param name="report">Live reporting's item while it is on and registered (DESIGN 11, Menu).</param>
     public static ContextMenu Build(IAppCommands commands, AppSettings settings, Localizer loc, ReleaseInfo? update = null,
-        SourceAvailability? sources = null, bool sourceTraffic = true, ReportMenuState? report = null) =>
-        MenuBuilder.Build(QuickMenuModel.Build(settings, sources ?? SourceAvailability.All, loc, update, sourceTraffic, report, commands.InstalledCharacters),
+        SourceAvailability? sources = null, bool sourceTraffic = true, ReportMenuState? report = null)
+    {
+        var menu = MenuBuilder.Build(QuickMenuModel.Build(settings, sources ?? SourceAvailability.All, loc, update, sourceTraffic, report, commands.InstalledCharacters),
             commands, loc);
+        if (commands is App.AppController controller) {
+            var balances = new MenuItem { Header = "Sub 4 Tokens…" };
+            balances.Click += (_, _) => controller.OpenSubscriptionBalances();
+            menu.Items.Insert(0, balances);
+        }
+        return menu;
+    }
 }

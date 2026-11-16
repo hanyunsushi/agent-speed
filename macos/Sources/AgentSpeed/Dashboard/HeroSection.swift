@@ -11,11 +11,11 @@ struct HeroSection: View {
     var body: some View {
         let l10n = model.l10n
         let gauge = model.gauge
-        let value = gauge.readoutValue
+        let value = model.snapshot.intervalRates.total.output
         let tier = gauge.tier
         let title = gauge.title
         let snapshot = model.snapshot
-        let speed = SpeedFormat.speed(value)
+        let speed = model.snapshot.intervalRates.sampleCount == 0 ? "—" : SpeedFormat.speed(value)
         let titleName = model.titles.text(title, in: model.titles.general, l10n: l10n)
         let context = l10n("agents.context", snapshot.generatingCount, snapshot.toolsCount)
         // The money unit (DESIGN 9): the billable live cost rate; heat and title keep following tokens.
@@ -47,6 +47,9 @@ struct HeroSection: View {
                     latin: model.dashboardLatinCaps,
                     reduceMotion: model.accessibility.reduceMotion
                 )
+                Text("30s · \(l10n.language.usesLatinCase ? "Average" : "平均") \(SpeedFormat.speed(snapshot.intervalRates.average.output)) \(l10n("unit.tokS")) · TTFT \(snapshot.lastResponse?.ttftMs.map { $0 < 1000 ? "\($0)ms" : String(format: "%.2fs", Double($0) / 1000) } ?? "—")")
+                    .font(DashboardFont.context)
+                    .foregroundStyle(.dashboardSecondary)
                 Text(context)
                     .font(DashboardFont.context)
                     .foregroundStyle(.dashboardSecondary)

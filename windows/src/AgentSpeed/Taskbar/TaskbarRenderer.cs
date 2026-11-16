@@ -17,6 +17,8 @@ namespace AgentSpeed.Taskbar;
 /// </summary>
 internal sealed class TaskbarRenderer
 {
+    private const double TokenRingSize = 28;
+    private const double TokenRingGap = 6;
     private const double ValueSize = 15;
     private const double UnitSize = 11;
     private const double GlyphStroke = 1.75;
@@ -76,10 +78,19 @@ internal sealed class TaskbarRenderer
         EnsureCache(scale, colors.Primary, colors.Secondary, state.UnitText);
         if (vertical)
         {
+            if (state.AverageValue is not null)
+            {
+                var tokenHeight = Padding * 2 + TokenRingSize * 2 + TokenRingGap
+                    + (ShowsSecondary(state) ? TaskbarSecondaryText.Height : 0)
+                    + (ShowsTraffic(state) ? TaskbarTrafficText.Height : 0)
+                    + (ShowsIntelligence(state) ? TaskbarIntelligenceText.Height : 0)
+                    + (state.BalanceText is null ? 0 : 24);
+                return (int)Math.Ceiling(tokenHeight * scale);
+            }
             var lines = state.Mode == BarDisplayMode.GlyphAndValue ? 2 : 1;
             var height = Padding + lines * 20 + (state.ShowUnit && state.Mode != BarDisplayMode.GlyphOnly ? 14 : 0)
                 + (ShowsSecondary(state) ? TaskbarSecondaryText.Height : 0) + (ShowsTraffic(state) ? TaskbarTrafficText.Height : 0)
-                + (ShowsIntelligence(state) ? TaskbarIntelligenceText.Height : 0) + Padding;
+                + (ShowsIntelligence(state) ? TaskbarIntelligenceText.Height : 0) + (state.BalanceText is null ? 0 : 24) + Padding;
             return (int)Math.Ceiling(height * scale);
         }
 
@@ -93,22 +104,30 @@ internal sealed class TaskbarRenderer
     private double ContentWidth(TaskbarState state)
     {
         var width = Padding * 2;
-        if (state.Mode != BarDisplayMode.ValueOnly)
+        if (state.AverageValue is not null)
+        {
+            width += TokenRingSize * 2 + TokenRingGap;
+        }
+        else if (state.Mode != BarDisplayMode.ValueOnly)
         {
             width += GlyphSize;
         }
 
         if (state.Mode != BarDisplayMode.GlyphOnly)
         {
-            if (state.Mode == BarDisplayMode.GlyphAndValue)
+            if (state.AverageValue is null)
             {
-                width += GlyphGap;
-            }
+                if (state.Mode == BarDisplayMode.GlyphAndValue)
+                {
+                    width += GlyphGap;
+                }
 
-            width += TabularWidth(ValueText(state), 0);
-            if (state.ShowUnit && _unit is not null)
-            {
-                width += UnitGap + _unit.WidthIncludingTrailingWhitespace;
+                width += TabularWidth(ValueText(state), 0);
+                if (state.ShowUnit && _unit is not null)
+                {
+                    width += UnitGap + _unit.WidthIncludingTrailingWhitespace;
+                }
+
             }
 
             if (ShowsSecondary(state))
@@ -130,6 +149,7 @@ internal sealed class TaskbarRenderer
             }
         }
 
+        if (state.BalanceText is { } balance) width += 8 + BalanceText(balance, Palette(state).Primary, _cacheScale).WidthIncludingTrailingWhitespace;
         return width;
     }
 
@@ -188,32 +208,49 @@ internal sealed class TaskbarRenderer
         var x = left + Padding;
         var centerY = height / 2;
 
-        if (state.Mode != BarDisplayMode.ValueOnly)
+        if (state.AverageValue is { } average)
         {
-            // Optically centered on the digits' cap height, not on the line box.
-            var glyphRect = new Rect(Snap(x, scale), centerY - GlyphSize / 2, GlyphSize, GlyphSize);
-            DrawGlyph(dc, state, scene, colors.Primary, glyphRect, scale);
-            x += GlyphSize + (state.Mode == BarDisplayMode.GlyphAndValue ? GlyphGap : 0);
+            DrawTokenRing(dc, state, colors, state.Value, x, centerY, scale);
+            x += TokenRingSize + TokenRingGap;
+            DrawTokenRing(dc, state, colors, average, x, centerY, scale);
+            x += TokenRingSize;
+        }
+        else
+        {
+            if (state.Mode != BarDisplayMode.ValueOnly)
+            {
+                // Optically centered on the digits' cap height, not on the line box.
+                var glyphRect = new Rect(Snap(x, scale), centerY - GlyphSize / 2, GlyphSize, GlyphSize);
+                DrawGlyph(dc, state, scene, colors.Primary, glyphRect, scale);
+                x += GlyphSize + (state.Mode == BarDisplayMode.GlyphAndValue ? GlyphGap : 0);
+            }
+
+            if (state.Mode == BarDisplayMode.GlyphOnly)
+            {
+                return;
+            }
+
+            var valueText = ValueText(state);
+            var idle = state.Tier == SpeedTier.Idle || state.Value <= 0 || state.ValueMuted;
+            var role = idle ? 1 : 0;
+            var baseline = Snap(centerY + CapHeight / 2, scale);
+            var valueWidth = TabularWidth(valueText, role);
+            DrawTabular(dc, valueText, x + valueWidth, baseline, role, scale);
+            x += valueWidth;
+
+            if (state.ShowUnit && _unit is not null)
+            {
+                x += UnitGap;
+                dc.DrawText(_unit, new Point(Snap(x, scale), baseline - _unit.Baseline));
+                x += _unit.WidthIncludingTrailingWhitespace;
+            }
+
         }
 
-        if (state.Mode == BarDisplayMode.GlyphOnly)
-        {
-            return;
-        }
-
-        var valueText = ValueText(state);
-        var idle = state.Tier == SpeedTier.Idle || state.Value <= 0 || state.ValueMuted;
-        var role = idle ? 1 : 0;
-        var baseline = Snap(centerY + CapHeight / 2, scale);
-        var valueWidth = TabularWidth(valueText, role);
-        DrawTabular(dc, valueText, x + valueWidth, baseline, role, scale);
-        x += valueWidth;
-
-        if (state.ShowUnit && _unit is not null)
-        {
-            x += UnitGap;
-            dc.DrawText(_unit, new Point(Snap(x, scale), baseline - _unit.Baseline));
-            x += _unit.WidthIncludingTrailingWhitespace;
+        if (state.BalanceText is { } balance) {
+            var text = BalanceText(balance, colors.Primary, scale);
+            dc.DrawText(text, new Point(x + 8, centerY - text.Height / 2));
+            x += 8 + text.WidthIncludingTrailingWhitespace;
         }
 
         if (ShowsSecondary(state))
@@ -232,6 +269,7 @@ internal sealed class TaskbarRenderer
         if (ShowsIntelligence(state))
         {
             _intelligence.Draw(dc, state.Intelligence!, x, centerY, scale, colors.Primary, colors.Secondary, state.HighContrast);
+            x += _intelligence.Width(state.Intelligence!, scale, colors.Primary, colors.Secondary, state.HighContrast);
         }
     }
 
@@ -239,28 +277,46 @@ internal sealed class TaskbarRenderer
         double width, double height)
     {
         var y = Padding;
-        if (state.Mode != BarDisplayMode.ValueOnly)
+        if (state.AverageValue is { } average)
         {
-            var rect = new Rect((width - GlyphSize) / 2, y, GlyphSize, GlyphSize);
-            DrawGlyph(dc, state, scene, colors.Primary, rect, 1);
-            y += 20;
+            DrawTokenRing(dc, state, colors, state.Value, (width - TokenRingSize) / 2, y + TokenRingSize / 2, 1);
+            y += TokenRingSize + TokenRingGap;
+            DrawTokenRing(dc, state, colors, average, (width - TokenRingSize) / 2, y + TokenRingSize / 2, 1);
+            y += TokenRingSize;
+        }
+        else
+        {
+            if (state.Mode != BarDisplayMode.ValueOnly)
+            {
+                var rect = new Rect((width - GlyphSize) / 2, y, GlyphSize, GlyphSize);
+                DrawGlyph(dc, state, scene, colors.Primary, rect, 1);
+                y += 20;
+            }
+
+            if (state.Mode == BarDisplayMode.GlyphOnly)
+            {
+                return;
+            }
+
+            var text = ValueText(state);
+            var role = state.Tier == SpeedTier.Idle || state.Value <= 0 || state.ValueMuted ? 1 : 0;
+            var total = TabularWidth(text, role);
+            var sample = Glyph('8', role);
+            DrawTabular(dc, text, (width + total) / 2, y + sample.Baseline, role, 1);
+            y += sample.Height;
+            if (state.ShowUnit && _unit is not null)
+            {
+                dc.DrawText(_unit, new Point((width - _unit.WidthIncludingTrailingWhitespace) / 2, y - 2));
+                y += 14;
+            }
+
         }
 
-        if (state.Mode == BarDisplayMode.GlyphOnly)
-        {
-            return;
-        }
-
-        var text = ValueText(state);
-        var role = state.Tier == SpeedTier.Idle || state.Value <= 0 || state.ValueMuted ? 1 : 0;
-        var total = TabularWidth(text, role);
-        var sample = Glyph('8', role);
-        DrawTabular(dc, text, (width + total) / 2, y + sample.Baseline, role, 1);
-        y += sample.Height;
-        if (state.ShowUnit && _unit is not null)
-        {
-            dc.DrawText(_unit, new Point((width - _unit.WidthIncludingTrailingWhitespace) / 2, y - 2));
-            y += 14;
+        if (state.BalanceText is { } balance) {
+            var text = BalanceText(balance, colors.Primary, 1);
+            if (text.WidthIncludingTrailingWhitespace > width - 8) text.SetFontSize(Math.Max(7, 12 * (width - 8) / text.WidthIncludingTrailingWhitespace));
+            dc.DrawText(text, new Point((width - text.WidthIncludingTrailingWhitespace) / 2, y + 4));
+            y += 24;
         }
 
         if (ShowsSecondary(state))
@@ -285,7 +341,29 @@ internal sealed class TaskbarRenderer
             var blockWidth = _intelligence.Width(state.Intelligence!, 1, colors.Primary, colors.Secondary, state.HighContrast) - TaskbarIntelligenceText.Gap;
             _intelligence.Draw(dc, state.Intelligence!, (width - blockWidth) / 2 - TaskbarIntelligenceText.Gap,
                 y + TaskbarIntelligenceText.Height / 2, 1, colors.Primary, colors.Secondary, state.HighContrast);
+            y += TaskbarIntelligenceText.Height;
         }
+    }
+
+    private FormattedText BalanceText(string value, Color color, double scale) => new(value, CultureInfo.CurrentCulture,
+        FlowDirection.LeftToRight, _valueFace, 12, new SolidColorBrush(color), null, TextFormattingMode.Ideal, scale);
+
+    private void DrawTokenRing(DrawingContext dc, TaskbarState state, (Color Primary, Color Secondary) colors,
+        double value, double x, double centerY, double scale)
+    {
+        var rect = new Rect(x, centerY - TokenRingSize / 2, TokenRingSize, TokenRingSize);
+        if (state.Mode != BarDisplayMode.ValueOnly)
+            GaugeGlyphPainter.Draw(dc, rect, HeatMath.Heat(value, state.Redline), colors.Primary,
+                !state.ColoredGlyph || state.HighContrast, 1, 0, GlyphStroke);
+        if (state.Mode == BarDisplayMode.GlyphOnly) return;
+        var label = state.TokensMeasured ? SpeedFormat.Speed(value) : "—";
+        var text = new FormattedText(label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, _valueFace,
+            12, new SolidColorBrush(colors.Primary), null, TextFormattingMode.Ideal, scale);
+        if (text.WidthIncludingTrailingWhitespace > TokenRingSize - 7)
+        {
+            text.SetFontSize(12 * (TokenRingSize - 7) / text.WidthIncludingTrailingWhitespace);
+        }
+        dc.DrawText(text, new Point(x + (TokenRingSize - text.WidthIncludingTrailingWhitespace) / 2, centerY - text.Height / 2));
     }
 
     private static void DrawGlyph(DrawingContext dc, TaskbarState state, BarScene scene, Color label, Rect rect, double scale)

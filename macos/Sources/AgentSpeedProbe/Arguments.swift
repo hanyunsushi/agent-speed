@@ -3,6 +3,7 @@ import Foundation
 
 struct ProbeArguments {
     enum Mode {
+        case telemetry(seconds: Int)
         case dumpToday
         case dumpHistory
         /// The copied unpriced diagnostics text (METRICS 9.10), as `reference.py --dump-unpriced`.
@@ -82,6 +83,9 @@ struct ProbeArguments {
         var iterator = arguments.makeIterator()
         while let argument = iterator.next() {
             switch argument {
+            case "--telemetry":
+                guard let value = iterator.next(), let seconds = Int(value), (1...600).contains(seconds) else { return nil }
+                mode = .telemetry(seconds: seconds)
             case "--dump-today":
                 mode = .dumpToday
             case "--dump-history":

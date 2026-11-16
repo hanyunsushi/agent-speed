@@ -57,7 +57,7 @@ public sealed class RemoteEngineTests
             Assert.Equal(frame.SourceTodayCost[i], cells.Aggregate(CostTally.Zero, (sum, c) => sum + c.TodayCost));
         }
 
-        Assert.True(frame.Cells[new HostSource(L.A, SourceKind.Codex)].LiveEstimated.Output > 0, "the unmeasured a3 and the in-flight agent");
+        Assert.Equal(0, frame.Cells[new HostSource(L.A, SourceKind.Codex)].LiveEstimated.Output);
         var b = frame.Cells[new HostSource(L.B, SourceKind.Codex)];
         Assert.Equal(new Dictionary<string, long> { ["gpt-5.5"] = 1 }, b.Unpriced);
         Assert.Equal(1, b.Today.Requests);

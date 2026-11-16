@@ -318,6 +318,16 @@ public enum MonitorWarning: Equatable, Sendable {
 }
 
 public struct SpeedSnapshot: Equatable, Sendable {
+    public var intervalRates = MeasuredRateWindow.empty
+    /// Arithmetic mean of agents with positive measured output in the current live window.
+    /// Idle/missing-data agents do not dilute the denominator; no measured output means zero.
+    public var averageLive: Rate {
+        let contributors = agents.filter { $0.live.output > 0 && $0.live.output.isFinite }
+        guard !contributors.isEmpty else { return .zero }
+        return Rate(output: contributors.reduce(0) { $0 + $1.live.output } / Double(contributors.count),
+                    total: contributors.reduce(0) { $0 + $1.live.total } / Double(contributors.count))
+    }
+
     public var timestamp: Date
     public var state: MonitorState
     public var live: Rate

@@ -14,17 +14,11 @@ enum StatusItemValue {
     static func current(_ model: AppModel) -> Parts {
         guard let money = money(model) else {
             let unit = model.l10n("unit.tokS")
-            let ttft = model.snapshot.lastResponse?.ttftMs.map(formatTTFT)
-            return Parts(text: SpeedFormat.speed(model.gauge.readoutValue), unit: unit, ttft: ttft)
+            return Parts(text: model.snapshot.intervalRates.sampleCount == 0 ? "—" : SpeedFormat.speed(model.snapshot.intervalRates.total.output), unit: unit, ttft: nil)
         }
         if money.unknown { return Parts(text: "–", unit: money.unit, ttft: nil) }
         let number = model.settings.barShowsUnit ? money.number : money.inline
         return Parts(text: (money.atLeast ? "≥" : "") + number, unit: money.unit, ttft: nil)
-    }
-
-    private static func formatTTFT(_ milliseconds: Int64) -> String {
-        if milliseconds < 1000 { return "\(milliseconds)ms" }
-        return String(format: "%.2fs", Double(milliseconds) / 1000)
     }
 
     static func money(_ model: AppModel) -> LiveMoney? {

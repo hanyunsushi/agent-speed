@@ -8,7 +8,7 @@ Imported by perf_score.py, which checks the same cases with the rest of that fix
 Every output token generating in the 3-second window (METRICS 6.3) weighs `w`; the part of it that is reasoning is
 `ρ`. `liveThinking = Σ ρ / 3 s`, `thinkingShare = Σ ρ / Σ w'`. The same sums restricted to one agent, or added over a
 board group's members, give that agent's or group's values; restricted to one model, the per-model values that live
-reporting sends (METRICS 11.10). It reuses the engine's intervals and estimates
+reporting sends (METRICS 11.10). It reuses the engine's confirmed decode intervals
 (reference.py); nothing here reads a log.
 """
 from __future__ import annotations
@@ -63,39 +63,19 @@ def reasoning_share(responses):
 
 
 def contributions(responses, agents, now):
-    """Every contribution of the window as (agent id, source, weight, reasoning, model): a response's own model, the
-    agent's current model for its in-flight estimate."""
+    """Every contribution of the window as (agent id, source, weight, reasoning, model): a finalized response's own model."""
     w0 = now - engine.WINDOW_MS
     measured = [r for r in responses if engine.interval(r) is not None and engine.is_final(r)]
-    unmeasured = [r for r in responses if engine.interval(r) is not None and not engine.is_final(r)]
-    by_id = {a["id"]: a for a in agents}
     found = []
 
     for r in measured:
         start, end = engine.interval(r)
         share = engine.overlap(w0, now, start, end) / (end - start)
+        if share <= 0:
+            continue
         found.append((r["agentId"], r["source"], r["output"] * share, min(r.get("reasoning", 0), r["output"]) * share,
                       r.get("model")))
 
-    def estimate(agent, seconds, model):
-        refs = engine.reference_set(measured, now, agent)
-        speed = engine.speed_of(refs) if refs else None
-        if speed is None or seconds <= 0:
-            return
-        weight = speed[0] * seconds
-        found.append((agent["id"], agent["source"], weight, weight * reasoning_share(refs), model))
-
-    for r in unmeasured:
-        agent = by_id.get(r["agentId"], {"id": r["agentId"], "model": r.get("model"), "source": r["source"]})
-        start, end = engine.interval(r)
-        estimate(agent, engine.overlap(w0, now, start, end) / 1000, r.get("model"))
-    for a in agents:
-        if a["phase"] != "generating" or a.get("inFlightStartMs") is None or a.get("lastLineMs") is None:
-            continue
-        if now - a["lastLineMs"] > 300_000:
-            continue
-        start = max([a["inFlightStartMs"]] + [r["endMs"] for r in responses if r["agentId"] == a["id"]])
-        estimate(a, engine.overlap(w0, now, start, now) / 1000, a.get("model"))
     return found
 
 

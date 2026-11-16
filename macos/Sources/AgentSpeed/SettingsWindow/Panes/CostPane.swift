@@ -29,6 +29,12 @@ struct CostPane: View {
                 SectionFootnote(l10n("settings.liveUnit.hint"))
             }
 
+            Section("Sub 4 Tokens") {
+                @Bindable var balances = model.subscriptionBalances
+                Toggle("在菜单栏显示订阅余额", isOn: $balances.showsMenuBar)
+                Button("订阅余额与连接设置…") { model.showSubscriptionBalances?() }
+            }
+
             SubscriptionsSection(model: model)
 
             PriceTableSection(model: model)

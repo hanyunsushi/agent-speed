@@ -1,5 +1,5 @@
 {
-  "_comment": "Times are Unix ms. Unless a case sets todayStartMs, use 0. Compare floats with 1e-6 absolute tolerance. historyMeasuredOutput maps bucket start ms to tok/s. `subsets` evaluate 6.8 for a source set: live output, today's peak and live cost over only those sources' responses and agents (keys that are absent are not checked). Responses with `costMicroUsd` carry their priced cost (METRICS 9.3; null = unknown price): `liveCost` is micro-USD per second and `liveCostKnownShare` the share of live output tokens whose cost is known (9.5); `todayCostMicroUsd` and `todayUnpricedRequests` are exact (9.6).",
+  "_comment": "Times are Unix ms. Unless a case sets todayStartMs, use 0. Compare floats with 1e-6 absolute tolerance. historyMeasuredOutput maps bucket start ms to tok/s. `subsets` evaluate 6.8 for a source set: live output, today's peak and live cost over only those sources' responses and agents (keys that are absent are not checked). Responses with `costMicroUsd` carry their priced cost (METRICS 9.3; null = unknown price): `liveCost` is micro-USD per second and `liveCostKnownShare` the share of live output tokens whose cost is known (9.5); `todayCostMicroUsd` and `todayUnpricedRequests` are exact (9.6). Fork contract: measured finalized usage only; historical/model/source forecasts never enter live or history. Legacy forecast scenarios verify that those inputs are ignored.",
   "cases": [
     {
       "name": "single completed response",
@@ -79,9 +79,9 @@
       "queries": [
         {
           "nowMs": 1000000006000,
-          "liveOutput": 41.666666666666664,
-          "liveTotal": 2125.0,
-          "estimatedShare": 0.6
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 850.0,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -313,9 +313,9 @@
       "queries": [
         {
           "nowMs": 1000000006000,
-          "liveOutput": 33.333333333333336,
-          "liveTotal": 1700.0,
-          "estimatedShare": 0.5
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 850.0,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -358,9 +358,9 @@
       "queries": [
         {
           "nowMs": 1000000006000,
-          "liveOutput": 33.333333333333336,
-          "liveTotal": 1700.0,
-          "estimatedShare": 0.5
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 850.0,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -475,9 +475,9 @@
       "queries": [
         {
           "nowMs": 1000000009000,
-          "liveOutput": 50.0,
-          "liveTotal": 50.0,
-          "estimatedShare": 0.6666666666666666
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 16.666666666666668,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -511,9 +511,9 @@
       "queries": [
         {
           "nowMs": 1000000003000,
-          "liveOutput": 50.0,
-          "liveTotal": 50.0,
-          "estimatedShare": 0.3333333333333333
+          "liveOutput": 33.333333333333336,
+          "liveTotal": 33.333333333333336,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -568,9 +568,9 @@
       "queries": [
         {
           "nowMs": 1000000003000,
-          "liveOutput": 83.33333333333333,
-          "liveTotal": 83.33333333333333,
-          "estimatedShare": 0.4
+          "liveOutput": 50.0,
+          "liveTotal": 50.0,
+          "estimatedShare": 0.0
         }
       ]
     },
@@ -921,7 +921,7 @@
           "liveTotal": 2550.0,
           "estimatedShare": 0.0,
           "liveCost": 1000.0,
-          "liveCostKnownShare": 1.0
+          "liveCostKnownShare": 1
         },
         {
           "nowMs": 1000000005000,
@@ -929,7 +929,7 @@
           "liveTotal": 1700.0,
           "estimatedShare": 0.0,
           "liveCost": 666.6666666666666,
-          "liveCostKnownShare": 1.0
+          "liveCostKnownShare": 1
         },
         {
           "nowMs": 1000000007000,
@@ -937,7 +937,7 @@
           "liveTotal": 0.0,
           "estimatedShare": 0.0,
           "liveCost": 0.0,
-          "liveCostKnownShare": 1.0
+          "liveCostKnownShare": 1
         }
       ]
     },
@@ -972,11 +972,11 @@
       "queries": [
         {
           "nowMs": 1000000006000,
-          "liveOutput": 41.666666666666664,
-          "liveTotal": 2125.0,
-          "estimatedShare": 0.6,
-          "liveCost": 833.3333333333334,
-          "liveCostKnownShare": 1.0
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 850.0,
+          "estimatedShare": 0.0,
+          "liveCost": 333.3333333333333,
+          "liveCostKnownShare": 1
         }
       ]
     },
@@ -1037,7 +1037,7 @@
           "liveTotal": 83.33333333333333,
           "estimatedShare": 0.0,
           "liveCost": 1000.0,
-          "liveCostKnownShare": 0.6
+          "liveCostKnownShare": 0.6000000000000001
         }
       ]
     },
@@ -1072,9 +1072,9 @@
       "queries": [
         {
           "nowMs": 1000000006000,
-          "liveOutput": 41.666666666666664,
-          "liveTotal": 41.666666666666664,
-          "estimatedShare": 0.6,
+          "liveOutput": 16.666666666666668,
+          "liveTotal": 16.666666666666668,
+          "estimatedShare": 0.0,
           "liveCost": 0.0,
           "liveCostKnownShare": 0.0
         }
@@ -1115,7 +1115,7 @@
           "liveTotal": 50.0,
           "estimatedShare": 0.0,
           "liveCost": 0.0,
-          "liveCostKnownShare": 1.0
+          "liveCostKnownShare": 1
         }
       ]
     },
@@ -1172,11 +1172,11 @@
       "queries": [
         {
           "nowMs": 1000000003000,
-          "liveOutput": 83.33333333333333,
-          "liveTotal": 83.33333333333333,
-          "estimatedShare": 0.4,
-          "liveCost": 1666.6666666666667,
-          "liveCostKnownShare": 1.0
+          "liveOutput": 50.0,
+          "liveTotal": 50.0,
+          "estimatedShare": 0.0,
+          "liveCost": 1000.0,
+          "liveCostKnownShare": 1
         }
       ]
     },
@@ -1255,7 +1255,7 @@
           "liveTotal": 0.0,
           "estimatedShare": 0.0,
           "liveCost": 0.0,
-          "liveCostKnownShare": 1.0,
+          "liveCostKnownShare": 1,
           "todayCostMicroUsd": 4000,
           "todayUnpricedRequests": 1
         }
@@ -1319,7 +1319,7 @@
           "liveTotal": 233.33333333333334,
           "estimatedShare": 0.0,
           "liveCost": 966.6666666666666,
-          "liveCostKnownShare": 1.0,
+          "liveCostKnownShare": 1,
           "subsets": [
             {
               "sources": [
@@ -1451,19 +1451,19 @@
       "queries": [
         {
           "nowMs": 1000000003000,
-          "liveOutput": 233.33333333333334,
-          "liveTotal": 233.33333333333334,
-          "estimatedShare": 0.21428571428571427,
-          "liveCost": 600.0,
-          "liveCostKnownShare": 0.8571428571428571
+          "liveOutput": 183.33333333333334,
+          "liveTotal": 183.33333333333334,
+          "estimatedShare": 0.0,
+          "liveCost": 500.0,
+          "liveCostKnownShare": 0.8181818181818181
         },
         {
           "nowMs": 1000000010000,
-          "liveOutput": 100.0,
-          "liveTotal": 100.0,
-          "estimatedShare": 1.0,
-          "liveCost": 200.0,
-          "liveCostKnownShare": 1.0
+          "liveOutput": 0.0,
+          "liveTotal": 0.0,
+          "estimatedShare": 0.0,
+          "liveCost": 0.0,
+          "liveCostKnownShare": 1
         }
       ]
     }

@@ -15,6 +15,10 @@ struct StatusItemLayout: Equatable {
     static let unitGap: CGFloat = 3
     static let ttftGap: CGFloat = 5
 
+    static let tokenRingDiameter: CGFloat = 21
+    static let tokenRingGap: CGFloat = 5
+    var tokenRings = false
+
     let showsGlyph: Bool
     let showsValue: Bool
     /// The unit label, or nil when hidden.
@@ -27,6 +31,10 @@ struct StatusItemLayout: Equatable {
     let height: CGFloat
     /// The money block's width (gap included); 0 without it.
     var secondaryWidth: CGFloat = 0
+    var balanceWidth: CGFloat = 0
+    static let balanceGap: CGFloat = 6
+    static var balanceFont: NSFont { .monospacedSystemFont(ofSize: 12, weight: .medium) }
+    var balanceX: CGFloat { secondaryX - balanceWidth }
     /// The network block's width (gap included); 0 without it.
     var trafficWidth: CGFloat = 0
     /// The intelligence block's width (gap included), after the network block; 0 without it.
@@ -49,12 +57,13 @@ struct StatusItemLayout: Equatable {
     init(model: AppModel, parts: StatusItemValue.Parts, valueWidth: CGFloat) {
         self.init(
             mode: model.settings.barMode,
-            showsUnit: model.settings.barShowsUnit,
+            showsUnit: model.settings.liveUnit == .tokens ? false : model.settings.barShowsUnit,
             unit: parts.unit,
             ttft: parts.ttft,
             valueWidth: valueWidth,
             height: Self.barHeight
         )
+        tokenRings = model.settings.liveUnit == .tokens
     }
 
     /// Height of the status bar button the content is drawn in.
@@ -71,13 +80,16 @@ struct StatusItemLayout: Equatable {
 
     /// Total status item length.
     var length: CGFloat {
+        if tokenRings {
+            return Self.padding * 2 + Self.tokenRingDiameter * 2 + Self.tokenRingGap + balanceWidth + secondaryWidth + readoutWidth
+        }
         var width = Self.padding * 2
         if showsGlyph { width += Self.glyphDiameter }
         if showsGlyph && showsValue { width += Self.glyphGap }
         if showsValue { width += valueWidth }
         if unit != nil { width += Self.unitGap + unitWidth }
         if ttft != nil { width += Self.ttftGap + ttftWidth }
-        return width + secondaryWidth + readoutWidth
+        return width + balanceWidth + secondaryWidth + readoutWidth
     }
 
     /// Left edge of the money block (its gap starts here).

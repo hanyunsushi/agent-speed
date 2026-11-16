@@ -56,6 +56,10 @@ enum WatchMode {
             line.add("state", "noSources")
         }
         line.add("live", raw: rate(snapshot.live))
+        line.add("intervalTotal", snapshot.intervalRates.total.output)
+        line.add("intervalAverage", snapshot.intervalRates.average.output)
+        line.add("intervalSamples", snapshot.intervalRates.sampleCount)
+        line.add("intervalEndedAtMs", snapshot.intervalRates.endedAtMs)
         line.add("estimatedShare", snapshot.liveEstimatedShare)
         line.add("generating", snapshot.generatingCount)
         line.add("tools", snapshot.toolsCount)

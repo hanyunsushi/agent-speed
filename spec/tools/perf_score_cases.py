@@ -102,12 +102,12 @@ def case_all_components():
     actions = [act(-5 * S, -4 * S),                      # before the span: not in C
                act(4500, 6500), act(14500, 14900, failed=True), act(24500, 24600), act(34500, 34520),
                act(40500, None)]                         # no result yet: not in C
-    # T = 1000 / 20 s = 50 -> 1; L = median(1000, 2000, 2500, 3000, 4000) = 2500 -> 2; R = 300 / 12 s = 25 -> 1.25;
-    # H = 4750 / 5000 = 0.95 -> 1; C = 4 calls; active = 20 s of responses + 2 + 0.4 + 0.1 + 0.02 s = 22 520 ms;
-    # N = 4 / (22 520 / 60 000) -> N / 3; U = (2000 · 400 · 100 · 50)^(1/4) -> 400 / U; S = 3/4 -> 0.75 / 0.95.
-    n_rate = 4 / (22520 / 60000)
+    # Decode T = 1000 / 11.5 s; L = median(1000, 2000, 2500, 3000, 4000) = 2500 -> 2; R = 300 / 6.5 s;
+    # H = 4750 / 5000 = 0.95 -> 1; C = 4 calls; active = 11.5 s of decode + 2 + 0.4 + 0.1 + 0.02 s = 14 020 ms;
+    # N = 4 / (14 020 / 60 000) -> N / 3; U = (2000 · 400 · 100 · 50)^(1/4) -> 400 / U; S = 3/4 -> 0.75 / 0.95.
+    n_rate = 4 / (14020 / 60000)
     u = (2000 * 400 * 100 * 50) ** 0.25
-    ratios = [("T", 1.0), ("L", 2.0), ("N", n_rate / 3), ("R", 1.25), ("H", 1.0), ("U", 400 / u), ("S", 0.75 / 0.95)]
+    ratios = [("T", 1000 / 11.5 / 50), ("L", 2.0), ("N", n_rate / 3), ("R", 300 / 6.5 / 20), ("H", 1.0), ("U", 400 / u), ("S", 0.75 / 0.95)]
     score = gm(ratios)
     # History of (claudeCode, claude-opus-5-5): today−1 (12) and today−14 (8) count; today−15 and today do not.
     # Pooled: T = 20 000 / 400 s = 50 -> 1; L = the centre of bin 26 (all 20 values) -> 5000 / (100 · 2^(53/8)).
@@ -116,8 +116,8 @@ def case_all_components():
                hist("2026-12-31", 30, 90000, 300000, {10: 30}), hist("2027-01-15", 30, 90000, 300000, {10: 30}),
                hist("2027-01-14", 40, 40000, 400000, {10: 40}, model=SONNET)]
     base = gm([("T", 1.0), ("L", 5000 / (100 * 2 ** (53 / 8)))])
-    comps = [comp("T", 1.0, samples=5, measure=50.0), comp("L", 2.0, samples=5, measure=2500),
-             comp("N", n_rate / 3, samples=4, measure=n_rate), comp("R", 1.25, samples=3, measure=25.0),
+    comps = [comp("T", 1000 / 11.5 / 50, samples=5, measure=1000 / 11.5), comp("L", 2.0, samples=5, measure=2500),
+             comp("N", n_rate / 3, samples=4, measure=n_rate), comp("R", 300 / 6.5 / 20, samples=3, measure=300 / 6.5),
              comp("H", 1.0, samples=5, measure=0.95), comp("U", 400 / u, samples=4, measure=u),
              comp("S", 0.75 / 0.95, samples=4, measure=0.75)]
     return {"name": "every component present: five Claude responses, four tool calls in the span, a 14-day baseline",
@@ -125,7 +125,7 @@ def case_all_components():
             "queries": [
                 {"nowMs": T0 + 45 * S, "want": {"a1": {
                     "form": "live", "score": score, "shown": half(score), "provisional": True, "n": 5, "tools": 4,
-                    "activeMs": 22520, "spanStartMs": T0, "model": OPUS, "components": comps, "baseline": base,
+                    "activeMs": 14020, "spanStartMs": T0, "model": OPUS, "components": comps, "baseline": base,
                     "vsUsual": score / base - 1, "vsUsualPercent": half(100 * (score / base - 1))}}},
                 {"nowMs": T0 + 44 * S + 300_001, "note": "300 s without a line: idle, the same score rests",
                  "want": {"a1": {"form": "resting", "score": score, "tools": 4}}},
@@ -145,34 +145,23 @@ def hist(day, n, output, duration, bins, source="claudeCode", model=OPUS, **extr
 
 
 def case_low_clamps():
-    """Codex at its minimum sample: T, U, S and H below their floors; L and R short of samples."""
+    """Codex at its minimum sample: throughput floor, missing latency/reasoning and pre-decode calls."""
     agents = [agent("c1", "codex", "generating", 4500)]
     responses = [resp("q1", "c1", 0, 100, 0, source="codex", model=GPT, first=50, inp=0, cached=0),
                  resp("q2", "c1", 1000, 2000, 0, source="codex", model=GPT, inp=1000, cached=0),
                  resp("q3", "c1", 3000, 4500, 1, source="codex", model=GPT, first=2900, inp=1000, cached=0)]
     actions = [act(0, 10 * S, True, GPT), act(0, 10 * S, True, GPT), act(0, 10 * S, True, GPT)]
-    # q1 lasts 100 ms: widened to 500 (spanStart = −400). T = 1 / 3 s -> 1/150 -> floor 0.01. L: q1 only (q2 has no
-    # first time, q3's is before its start) -> 1 sample. R: no reasoning. H: q2, q3 (q1 has no input) -> 2 samples.
-    # C = 3 calls of 10 s, all failed: U = 10 000 -> 0.04 -> 0.05; S = 0 -> 0.05. active = [−400, 10 000] = 10 400 ms.
-    n_rate = 3 / (10400 / 60000)
-    score = gm([("T", 0.01), ("N", n_rate / 3), ("U", 0.05), ("S", 0.05)])
-    return {"name": "lower clamps: T at 0.01, U and S at 0.05; L, R and H short of samples; n = 3 is enough",
+    # Decode durations are 50 + 1000 + 1500 = 2550 ms. All calls start before the span (50 ms).
+    score = gm([("T", 0.01)])
+    return {"name": "lower throughput clamp; calls before the decode span are excluded",
             "agents": agents, "responses": responses, "actions": {"c1": actions},
-            "queries": [{"nowMs": T0 + 20 * S, "want": {"c1": {
-                "form": "live", "score": score, "provisional": True, "n": 3, "tools": 3, "activeMs": 10400,
-                "spanStartMs": T0 - 400, "model": GPT,
+            "queries": [{"nowMs": T0 + at, "want": {"c1": {
+                "form": "live", "score": score, "provisional": True, "n": 3, "tools": 0, "activeMs": 2550,
+                "spanStartMs": T0 + 50, "model": GPT,
                 "components": [comp("T", 0.01, samples=3), comp("L", reason="fewSamples", samples=1),
-                               comp("N", n_rate / 3, samples=3), comp("R", reason="fewSamples", samples=0),
-                               comp("H", reason="fewSamples", samples=2), comp("U", 0.05, samples=3, measure=10000.0),
-                               comp("S", 0.05, samples=3, measure=0.0)]}}},
-                        {"nowMs": T0 + 9999, "note": "the calls end after nowMs: none is in C yet",
-                         "want": {"c1": {"tools": 0, "activeMs": 3000,
-                                         "score": gm([("T", 0.01)]),
-                                         "components": [comp("T", 0.01), comp("L", reason="fewSamples"),
-                                                        comp("N", reason="fewSamples", samples=0),
-                                                        comp("R", reason="fewSamples"), comp("H", reason="fewSamples"),
-                                                        comp("U", reason="fewSamples", samples=0),
-                                                        comp("S", reason="fewSamples", samples=0)]}}}]}
+                               comp("N", reason="fewSamples", samples=0), comp("R", reason="fewSamples", samples=0),
+                               comp("H", reason="fewSamples", samples=2), comp("U", reason="fewSamples", samples=0),
+                               comp("S", reason="fewSamples", samples=0)]}}} for at in (20 * S, 9999)]}
 
 
 def case_cap_and_ties():
@@ -190,39 +179,39 @@ def case_cap_and_ties():
               act(950 * S, 1_000_001)]                       # result after nowMs
     stored += [act(100 * S + j * S, 100 * S + j * S + 200, failed=j in (3, 30, 57)) for j in range(59)]
     # Sample: r20 … r02, then q01 before r01 (same end, key "q01" < "r01"): n = 20, spanStart = 10 s.
-    # T = (19 · 10 000 + 30 000) / 40 s = 5500 -> 110 (no upper clamp); L = 100 -> max(100, 250) -> 20;
+    # T = (19 · 10 000 + 30 000) / 38 s = 5789.47 -> 115.789 (no upper clamp); L = 100 -> max(100, 250) -> 20;
     # H = 1 -> 1/0.95; R none. C = the 15-minute call and 59 short ones = 60 (3 failed): S = 0.95 -> 1;
-    # U = exp((ln 900 000 + 59 ln 200) / 60); active = [10,12] ∪ [20,22] ∪ [30,32] ∪ [40, 940] s = 906 000 ms.
-    n_rate = 60 / (906000 / 60000)
+    # U = exp((ln 900 000 + 59 ln 200) / 60); active = [10,12] ∪ [20,22] ∪ [30,32] ∪ [40, 940] s = 905 700 ms.
+    n_rate = 60 / (905700 / 60000)
     u = math.exp((math.log(900000) + 59 * math.log(200)) / 60)
-    score = gm([("T", 110.0), ("L", 20.0), ("N", n_rate / 3), ("H", 1 / 0.95), ("U", 400 / u), ("S", 1.0)])
+    score = gm([("T", 220000 / 38 / 50), ("L", 20.0), ("N", n_rate / 3), ("H", 1 / 0.95), ("U", 400 / u), ("S", 1.0)])
     return {"name": "newest 20 with a tie broken by key; the last 64 stored actions; the 15-minute limit; T above 20 "
                     "is not clamped; L below 250 ms counts as 250",
             "agents": agents, "responses": responses, "actions": {"d1": dropped + stored},
             "queries": [{"nowMs": T0 + 1_000_000, "want": {"d1": {
-                "form": "resting", "score": score, "provisional": False, "n": 20, "tools": 60, "activeMs": 906000,
+                "form": "resting", "score": score, "provisional": False, "n": 20, "tools": 60, "activeMs": 905700,
                 "spanStartMs": T0 + 10 * S, "model": OPUS,
-                "components": [comp("T", 110.0, measure=5500.0), comp("L", 20.0, measure=100),
+                "components": [comp("T", 220000 / 38 / 50, measure=220000 / 38), comp("L", 20.0, measure=100),
                                comp("N", n_rate / 3), comp("R", reason="fewSamples", samples=0),
                                comp("H", 1 / 0.95, samples=20), comp("U", 400 / u), comp("S", 1.0, measure=0.95)]}}}]}
 
 
 def case_high_clamps():
-    """Three 500 ms Codex responses and ten 10 ms calls: N above its ceiling, U at its floor, H at zero."""
+    """Three 200 ms decode intervals and ten calls before the first decode, with cache at zero."""
     agents = [agent("e1", "codex", "tools", 1500)]
     responses = [resp("e%d" % i, "e1", i * 500, i * 500 + 500, 100, source="codex", model=GPT, first=i * 500 + 300,
                       inp=1000, cached=0, reasoning=50) for i in range(3)]
     actions = [act(100, 110, model=GPT) for _ in range(10)]
-    # T = 300 / 1.5 s = 200 -> 4; L = 300 -> 5000/300; N = 10 / (1500 / 60 000) = 400 -> 133.3 -> 20;
-    # R = 150 / 1.5 s = 100 -> 5; H = 0 -> 0.05; U = 50 (10 ms floored to 50) -> 8; S = 1 -> 1/0.95.
-    score = gm([("T", 4.0), ("L", 5000 / 300), ("N", 20.0), ("R", 5.0), ("H", 0.05), ("U", 8.0), ("S", 1 / 0.95)])
-    return {"name": "upper clamps: N at 20; a 10 ms call counts as 50 ms; a cache hit of 0 at the 0.05 floor",
+    # Three 200 ms decode intervals: T=300/0.6=500, R=150/0.6=250. Calls precede decode start.
+    score = gm([("T", 10.0), ("L", 5000 / 300), ("R", 12.5), ("H", 0.05)])
+    return {"name": "decode excludes first-content latency and calls before the span; cache at its floor",
             "agents": agents, "responses": responses, "actions": {"e1": actions},
             "queries": [{"nowMs": T0 + 1500, "want": {"e1": {
-                "form": "live", "score": score, "n": 3, "tools": 10, "activeMs": 1500,
-                "components": [comp("T", 4.0), comp("L", 5000 / 300, measure=300), comp("N", 20.0, measure=400.0),
-                               comp("R", 5.0, measure=100.0), comp("H", 0.05, measure=0.0),
-                               comp("U", 8.0, measure=50.0), comp("S", 1 / 0.95)]}}}]}
+                "form": "live", "score": score, "n": 3, "tools": 0, "activeMs": 600,
+                "components": [comp("T", 10.0), comp("L", 5000 / 300, measure=300),
+                               comp("N", reason="fewSamples", samples=0), comp("R", 12.5, measure=250.0),
+                               comp("H", 0.05, measure=0.0), comp("U", reason="fewSamples", samples=0),
+                               comp("S", reason="fewSamples", samples=0)]}}}]}
 
 
 def case_long_latency():
@@ -231,13 +220,13 @@ def case_long_latency():
     lat = [200_000, 300_000, 320_000, 350_000]
     responses = [resp("f%d" % i, "f1", i * 400 * S, (i + 1) * 400 * S, 20000, first=i * 400 * S + lat[i], inp=0,
                       cached=0) for i in range(4)]
-    # T = 80 000 / 1600 s = 50 -> 1; L = (300 000 + 320 000) / 2 = 310 000 -> 0.0161 -> 0.05; H: no input.
-    score = gm([("T", 1.0), ("L", 0.05)])
+    # T = 80 000 / 430 decode seconds; L = (300 000 + 320 000) / 2 = 310 000 -> 0.0161 -> 0.05; H: no input.
+    score = gm([("T", 80000 / 430 / 50), ("L", 0.05)])
     return {"name": "an even count takes the mean of the two middle latencies; a slow first content clamps at 0.05",
             "agents": agents, "responses": responses, "actions": {},
             "queries": [{"nowMs": T0 + 1600 * S, "want": {"f1": {
                 "score": score, "n": 4, "tools": 0,
-                "components": [comp("T", 1.0), comp("L", 0.05, measure=310000.0),
+                "components": [comp("T", 80000 / 430 / 50), comp("L", 0.05, measure=310000.0),
                                comp("N", reason="fewSamples", samples=0), comp("R", reason="fewSamples", samples=0),
                                comp("H", reason="fewSamples", samples=0), comp("U", reason="fewSamples", samples=0),
                                comp("S", reason="fewSamples", samples=0)]}}}]}
@@ -275,8 +264,8 @@ def case_provisional():
     agents = [agent("p1", "claudeCode", "idle", 47 * S)]
     responses = [resp("p%d" % i, "p1", i * 5 * S, i * 5 * S + 2 * S, 100, first=i * 5 * S + 1000, inp=0, cached=0)
                  for i in range(10)]
-    # T = 1000 / 20 s = 50 -> 1 (nine: 900 / 18 s, still 50); L = 1000 -> 5.
-    score = gm([("T", 1.0), ("L", 5.0)])
+    # T = 1000 / 10 decode seconds = 100 -> 2 (nine: 900 / 9 s); L = 1000 -> 5.
+    score = gm([("T", 2.0), ("L", 5.0)])
     return {"name": "provisional below 10 responses; the window keeps a response whose end is exactly 30 minutes old",
             "agents": agents, "responses": responses, "actions": {},
             "queries": [{"nowMs": T0 + 2 * S + 30 * MIN, "want": {"p1": {"score": score, "n": 10,
@@ -344,21 +333,21 @@ def days_cases():
     events = [ev_resp(a), ev_act(act(5000, 7000, failed=True)), ev_resp(b), ev_resp(c),
               ev_act(act(2000, 3000)), ev_act(act(0, 9500)), ev_resp(d), ev_act(act(20 * S, 20 * S + 900_001)),
               ev_act(act(30 * S, None)), ev_act(act(40 * S, 40 * S + 20, model=None)), ev_resp(e)]
-    # opus, DAY: A (n 1, out 400, 4000 ms, latency 1000 -> bin 13, reasoning 100 over 4000 ms, cache 900/1000) and C
-    # (3000 ms, latency 200 -> bin 4, cache 1000/2000). Calls: 2000 ms (failed), 1000 ms, 9500 ms.
-    # activeMs (online, opus): A adds 4000 (cu 5000); the 5000–7000 call adds 2000 (cu 7000); C adds 9000 − 7000 = 2000
-    # (cu 9000); the 2000–3000 call adds 0; the 0–9500 call adds 500 (the exact union would add 1500): 8500.
-    # sonnet: D adds 2000. The model-less call (20 ms) goes to model "" and adds 20. E ends the next day: its own
-    # record there, active 2000.
-    opus_day = dict(perf_score.empty_record(), n=2, outputSum=700, durationMsSum=7000, reasonN=1, reasonOutput=100,
-                    reasonDurationMsSum=4000, cacheN=2, cacheInput=3000, cacheCached=1900, toolN=3,
-                    toolLnSum=math.log(2000) + math.log(1000) + math.log(9500), toolFailed=1, activeMs=8500)
+    # opus, DAY: A (n 1, out 400, 3000 decode ms, latency 1000 -> bin 13, reasoning 100 over 3000 ms) and C
+    # (2800 decode ms, latency 200 -> bin 4, cache 1000/2000). Calls: 2000 ms (failed), 1000 ms, 9500 ms.
+    # activeMs (online, opus): A adds 3000 (cu 5000); the 5000–7000 call adds 2000 (cu 7000); C adds 9000 − 7000 = 2000
+    # (cu 9000); the 2000–3000 call adds 0; the 0–9500 call adds 500 (the exact union would add 2500): 7500.
+    # sonnet: D adds 500. The model-less call (20 ms) goes to model "" and adds 20. E ends the next day: its own
+    # record there, active 1850.
+    opus_day = dict(perf_score.empty_record(), n=2, outputSum=700, durationMsSum=5800, reasonN=1, reasonOutput=100,
+                    reasonDurationMsSum=3000, cacheN=2, cacheInput=3000, cacheCached=1900, toolN=3,
+                    toolLnSum=math.log(2000) + math.log(1000) + math.log(9500), toolFailed=1, activeMs=7500)
     opus_day["latencyBins"] = [1 if k in (4, 13) else 0 for k in range(64)]
     none_day = dict(perf_score.empty_record(), toolN=1, toolLnSum=math.log(50), activeMs=20)
-    sonnet_day = dict(perf_score.empty_record(), n=1, outputSum=100, durationMsSum=2000, activeMs=2000)
+    sonnet_day = dict(perf_score.empty_record(), n=1, outputSum=100, durationMsSum=500, activeMs=500)
     sonnet_day["latencyBins"] = [1 if k == 15 else 0 for k in range(64)]   # 1500 ms: E_15 = 1346 ≤ 1500 < E_16 = 1600
-    next_day = dict(perf_score.empty_record(), n=1, outputSum=80, durationMsSum=2000, cacheN=1, cacheInput=500,
-                    cacheCached=500, activeMs=2000)
+    next_day = dict(perf_score.empty_record(), n=1, outputSum=80, durationMsSum=1850, cacheN=1, cacheInput=500,
+                    cacheCached=500, activeMs=1850)
     next_day["latencyBins"] = [1 if k == 2 else 0 for k in range(64)]      # 150 ms: E_2 = 142 ≤ 150 < E_3 = 169
     # DeepSeek: reasoning is not separate (no R sums); its cache counts; no first time.
     k_day = dict(perf_score.empty_record(), n=1, outputSum=100, durationMsSum=2000, cacheN=1, cacheInput=800,
@@ -470,7 +459,7 @@ def readouts_cases():
         "agents": [running("a1", "claudeCode", "tools", 100 * S, OPUS), running("a2", "codex", "generating", 100 * S, GPT)],
         # a1 latencies 800, 1200, 1500, 3000 and one response without firstMs; a2 600 and 900. Left out: c0 ends
         # 31 minutes before now, r6 is not final. Pooled: 600 800 900 1200 1500 3000 → (900 + 1200) / 2 = 1050.
-        # recentSpeed: a1's newest three (r5, r4, r3) 1200 tokens over 12 s = 100; a2 530 over 5 s = 106.
+        # recentSpeed: a1's newest three (r5, r4, r3) 1200 tokens over 7.5 decode seconds = 160; a2 530 over 3.5 s.
         "responses": [resp("r1", "a1", 0, 4 * S, 100, first=800), resp("r2", "a1", 10 * S, 14 * S, 200, first=11200),
                       resp("r3", "a1", 20 * S, 24 * S, 300, first=21500), resp("r4", "a1", 30 * S, 34 * S, 400, first=33000),
                       resp("r5", "a1", 40 * S, 44 * S, 500),
@@ -479,8 +468,8 @@ def readouts_cases():
                       resp("c1", "a2", 50 * S, 52 * S, 200, source="codex", model=GPT, first=50600),
                       resp("c2", "a2", 60 * S, 63 * S, 330, source="codex", model=GPT, first=60900)],
         "want": {"firstLatency": {"ms": 1050, "n": 6},
-                 "models": [{"model": GPT, "speed": 106, "agents": 1, "shown": 106},
-                            {"model": OPUS, "speed": 100, "agents": 1, "shown": 100}]},
+                 "models": [{"model": OPUS, "speed": 160, "agents": 1, "shown": 160},
+                            {"model": GPT, "speed": 530 / 3.5, "agents": 1, "shown": 151}]},
     }
     argon = "gemini-4-argon"
     dedupe_case = {
@@ -492,14 +481,14 @@ def readouts_cases():
                    running("b5", "claudeCode", "idle", 100 * S, SONNET),
                    running("b6", "claudeCode", "generating", -201 * S, "claude-haiku-4-5"),
                    running("b7", "codex", "tools", 100 * S, None)],
-        # b1 240 / 2 s = 120 and b2 400 / 5 s = 80: OPUS 120 over two agents; argon 240 / 2 s = 120, after OPUS by id;
+        # b1 240 / 1.5 decode seconds = 160 and b2 400 / 5 s = 80: OPUS 160 over two agents; argon 240 / 2 s = 120, after OPUS by id;
         # GPT has no response. b5 is idle, b6 stale (301 s since its last line), b7 has no model. One latency (x1).
         "responses": [resp("x1", "b1", 0, 2 * S, 240, first=500), resp("x2", "b2", 10 * S, 15 * S, 400),
                       resp("x3", "b3", 20 * S, 22 * S, 240, source="gemini", model=argon),
                       resp("x5", "b5", 30 * S, 31 * S, 500, model=SONNET),
                       resp("x6", "b6", -250 * S, -248 * S, 900, model="claude-haiku-4-5")],
         "want": {"firstLatency": {"ms": None, "n": 1},
-                 "models": [{"model": OPUS, "speed": 120, "agents": 2, "shown": 120},
+                 "models": [{"model": OPUS, "speed": 160, "agents": 2, "shown": 160},
                             {"model": argon, "speed": 120, "agents": 1, "shown": 120},
                             {"model": GPT, "speed": None, "agents": 1, "shown": None}]},
     }

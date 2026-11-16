@@ -83,7 +83,7 @@ struct RemoteEngineTests {
             #expect(todayCost == output.todayCostBySource[kind] ?? CostTally())
         }
         let remoteCodex = output.cells[HostSource(host: L.a, source: .codex)]
-        #expect((remoteCodex?.liveEstimated.output ?? 0) > 0, "the unmeasured a3 and the in-flight agent")
+        #expect((remoteCodex?.liveEstimated.output ?? 0) == 0, "unmeasured and in-flight output stays unknown")
         #expect(output.cells[HostSource(host: L.b, source: .codex)]?.unpriced == ["gpt-5.5": 1])
         #expect(output.cells[HostSource(host: L.b, source: .codex)]?.today.requests == 1, "yesterday's is not today's")
     }

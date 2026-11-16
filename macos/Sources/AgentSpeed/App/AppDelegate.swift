@@ -6,6 +6,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
     private let options: LaunchOptions
     private var model: AppModel?
+    private var subscriptionBalances: SubscriptionBalanceController?
     private var statusItem: StatusItemController?
     private var orbs: OrbWindowManager?
     private var boardWindows: BoardWindowManager?
@@ -85,10 +86,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
             return
         }
         #endif
+        CodexTelemetry.shared.start()
         let model = Self.makeModel()
         model.commands = self
         self.model = model
         model.activate(live: true)
+        let balances = SubscriptionBalanceController(state: model.subscriptionBalances)
+        subscriptionBalances = balances
+        model.showSubscriptionBalances = { [weak balances] in balances?.showSettings() }
+        model.subscriptionBalances.start()
 
         let dashboard = DashboardController(model: model)
         self.dashboard = dashboard
@@ -211,6 +217,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, AppCommands {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        subscriptionBalances?.stop()
         updateScheduler?.stop()
         boardWindows?.shutdown()
         orbs?.shutdown()

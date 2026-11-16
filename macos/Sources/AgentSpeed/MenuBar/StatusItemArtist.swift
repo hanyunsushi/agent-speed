@@ -46,11 +46,53 @@ enum StatusItemArtist {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let palette = StatusItemPalette(isDark: dark, increasedContrast: state.increasedContrast)
         let layout = state.layout
-        if layout.showsGlyph { drawGauge(state, palette: palette, layout: layout, in: context) }
-        if layout.showsValue { drawText(state, palette: palette, layout: layout) }
+        if layout.tokenRings {
+            drawTokenRing(state.layout.showsValue ? state.value : "", showsRing: state.layout.showsGlyph, ring: state.ring, colored: state.colored, x: StatusItemLayout.padding, height: layout.height, palette: palette, context: context)
+            drawTokenRing(state.layout.showsValue ? state.averageValue : "", showsRing: state.layout.showsGlyph, ring: state.averageRing, colored: state.colored,
+                          x: StatusItemLayout.padding + StatusItemLayout.tokenRingDiameter + StatusItemLayout.tokenRingGap,
+                          height: layout.height, palette: palette, context: context)
+        } else {
+            if layout.showsGlyph { drawGauge(state, palette: palette, layout: layout, in: context) }
+            if layout.showsValue { drawText(state, palette: palette, layout: layout) }
+        }
+        if let balance = state.balance {
+            let font = StatusItemLayout.balanceFont
+            let text = NSAttributedString(string: balance, attributes: [.font: font, .foregroundColor: palette.primary.nsColor])
+            text.draw(at: CGPoint(x: layout.balanceX + StatusItemLayout.balanceGap,
+                                 y: (layout.height / 2 + font.capHeight / 2 - 0.5).rounded() - font.ascender))
+        }
         state.secondary?.draw(at: layout.secondaryX, height: layout.height, palette: palette)
         state.traffic?.draw(at: layout.readoutX, height: layout.height, palette: palette)
         state.intelligence?.draw(at: layout.intelligenceX, height: layout.height, palette: palette)
+    }
+
+    private static func drawTokenRing(_ value: String, showsRing: Bool, ring: StatusItemState.Ring, colored: Bool, x: CGFloat,
+                                      height: CGFloat, palette: StatusItemPalette, context: CGContext) {
+        let diameter = StatusItemLayout.tokenRingDiameter
+        let center = CGPoint(x: x + diameter / 2, y: height / 2)
+        let radius = (diameter - StatusItemLayout.glyphLineWidth) / 2
+        let start = 135 * CGFloat.pi / 180
+        if showsRing {
+            context.saveGState()
+            context.setLineCap(.round)
+            context.setLineWidth(StatusItemLayout.glyphLineWidth)
+            context.addArc(center: center, radius: radius, startAngle: start, endAngle: start + 1.5 * .pi, clockwise: false)
+            context.setStrokeColor(palette.track.cgColor)
+            context.strokePath()
+            if ring.fraction > 0 {
+                context.addArc(center: center, radius: radius, startAngle: start, endAngle: start + 1.5 * .pi * CGFloat(ring.fraction), clockwise: false)
+                context.setStrokeColor((colored ? palette.heat(ring.fraction) : palette.primary).cgColor)
+                context.strokePath()
+            }
+            context.restoreGState()
+        }
+        guard !value.isEmpty else { return }
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .medium)
+        let width = (value as NSString).size(withAttributes: [.font: font]).width
+        let fit = NSFont.monospacedDigitSystemFont(ofSize: min(10, 10 * 16 / max(1, width)), weight: .medium)
+        let text = NSAttributedString(string: value, attributes: [.font: fit, .foregroundColor: palette.primary.nsColor])
+        let size = text.size()
+        text.draw(at: CGPoint(x: center.x - size.width / 2, y: center.y - fit.capHeight / 2 - (fit.ascender - fit.capHeight)))
     }
 
     private static func drawGauge(_ state: StatusItemState, palette: StatusItemPalette, layout: StatusItemLayout, in context: CGContext) {

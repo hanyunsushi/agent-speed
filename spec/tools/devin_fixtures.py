@@ -227,7 +227,7 @@ def write_fixtures(root):
 
 
 def day_totals(agents):
-    """UTC day totals of the scenario's responses (METRICS 8): measured = final with a valid interval, widened to 500 ms."""
+    """UTC day totals of the scenario's responses (METRICS 8): measured = final with a valid interval, using the observed decode interval."""
     days = {}
     for agent in agents.values():
         for r in agent["responses"]:
@@ -238,10 +238,13 @@ def day_totals(agents):
             for field in ("input", "cachedInput", "cacheWriteInput", "output", "reasoning"):
                 row[field] += r[field]
             start, end = r["startMs"], r["endMs"]
-            measured = start is not None and 0 <= end - start <= 15 * 60_000
+            valid = start is not None and 0 < end - start <= 15 * 60_000
+            first = r.get("firstMs")
+            decode_start = first if valid and first is not None and start <= first < end else start
+            measured = valid and r.get("final", True)
             if measured:
                 row["measuredOutput"] += r["output"]
-                row["measuredMs"] += max(500, end - start)
+                row["measuredMs"] += end - decode_start
             row["agents"].add(r["agentId"])
             model = row["models"].setdefault(r["model"] or "", dict(requests=0, output=0))
             model["requests"] += 1

@@ -251,17 +251,17 @@ public sealed class SubsetPeakEngineTests
     }
 
     [Fact]
-    public void TheEstimatedPartOfEachSourcesLiveRateIsReported()
+    public void InFlightSourcesHaveNoEstimatedLiveRate()
     {
         var engine = EngineWithInFlightCodex();
 
         var frame = engine.Compute(B, Day, observeLive: false);
 
-        Assert.Equal(100, frame.SourceLiveEstimated[(int)SourceKind.Codex].Output, 9);
+        Assert.Equal(0, frame.SourceLiveEstimated[(int)SourceKind.Codex].Output, 9);
         Assert.Equal(frame.SourceLive[(int)SourceKind.Codex], frame.SourceLiveEstimated[(int)SourceKind.Codex]);
         Assert.Equal(Rate.Zero, frame.SourceLiveEstimated[(int)SourceKind.ClaudeCode]);
         Assert.Equal(100, frame.SourceLive[(int)SourceKind.ClaudeCode].Output, 9);
-        Assert.Equal(0.5, frame.EstimatedShare, 12);
+        Assert.Equal(0, frame.EstimatedShare, 12);
         Assert.Equal(100, engine.MeasuredPeakOutput(Both), 4);
     }
 

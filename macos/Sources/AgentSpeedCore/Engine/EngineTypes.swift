@@ -119,6 +119,7 @@ struct EngineAgentStatus: Equatable, Sendable {
 struct EngineOutput: Sendable {
     var nowMs: Int64
     var live: Rate
+    var intervalRates = MeasuredRateWindow.empty
     var liveEstimatedShare: Double
     var sourceLive: [SourceKind: Rate]
     /// The estimated part of `sourceLive`.

@@ -18,7 +18,9 @@ final class StatusItemAccessibility {
         loop = ObservationLoop { [weak self] in
             guard let self else { return }
             _ = (self.model.gauge.readoutValue, self.model.gauge.title, self.model.l10n.language)
+            _ = (self.model.subscriptionBalances.showsMenuBar, self.model.subscriptionBalances.menuBarTitle)
             _ = (self.model.settings.liveUnit, self.model.snapshot.liveCost, self.model.cost.currency)
+            _ = (self.model.snapshot.intervalRates, self.model.snapshot.lastResponse?.ttftMs)
             if self.model.settings.barSecondary { _ = self.model.snapshot.sources }
             _ = (self.model.settings.barTraffic, self.model.settings.barIntelligence)
             if self.model.settings.barTraffic.isNetwork { _ = self.model.traffic.snapshot.timestamp }
@@ -60,7 +62,7 @@ final class StatusItemAccessibility {
         guard let button else { return }
         updatedAt = Clock.now
         let l10n = model.l10n
-        let speed = Self.spokenSpeed(model.gauge.readoutValue, locale: l10n.locale)
+        let speed = Self.spokenSpeed(model.snapshot.intervalRates.total.output, locale: l10n.locale)
         let title = model.titles.text(model.gauge.title, in: model.titles.general, l10n: l10n).capitalized(with: l10n.locale)
         let name = l10n("app.name")
         if button.accessibilityLabel() != name { button.setAccessibilityLabel(name) }
@@ -76,12 +78,17 @@ final class StatusItemAccessibility {
         let topAgent = intelligence == nil ? nil
             : StatusItemIntelligence.topAgent(snapshot.intelligence.score, agents: snapshot.agents, l10n: l10n)
         func tooltip(_ text: String) -> String {
-            [text, topAgent].compactMap { $0 }.joined(separator: "\n")
+            let average = SpeedFormat.speed(snapshot.intervalRates.average.output)
+            let total = SpeedFormat.speed(snapshot.intervalRates.total.output)
+            let latency = snapshot.lastResponse?.ttftMs.map { $0 < 1000 ? "\($0)ms" : String(format: "%.2fs", Double($0) / 1000) } ?? "—"
+            let labels = l10n.language.usesLatinCase ? "30s Sum / Average" : "30秒总和 / 平均"
+            let measured = snapshot.intervalRates.sampleCount > 0 ? "\(labels): \(total) / \(average) tok/s" : (l10n.language.usesLatinCase ? "Waiting for measured speed" : "等待真实测速数据")
+            return [text, measured, "TTFT: \(latency)", topAgent].compactMap { $0 }.joined(separator: "\n")
         }
         let separator = l10n.language == .ja ? "、" : l10n.language.usesLatinCase ? ", " : "，"
         let secondary = StatusItemSecondary(model: model)?.spoken
         func withTraffic(_ text: String) -> String {
-            [text, secondary, traffic, intelligence?.spoken].compactMap { $0 }.joined(separator: separator)
+            [text, model.subscriptionBalances.showsMenuBar ? model.subscriptionBalances.menuBarTitle : nil, secondary, traffic, intelligence?.spoken].compactMap { $0 }.joined(separator: separator)
         }
         if let money = StatusItemValue.money(model) {
             // The money unit reads the amount with the currency's name (DESIGN 9, Accessibility).

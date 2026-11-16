@@ -2358,6 +2358,8 @@ responses with the same model within 30 minutes (any agent), else with the same 
 Only measured responses are ever used as a speed reference.
 
 ### 6.3 Live rate
+
+**Fork override:** live/history values use confirmed measurements only; in-flight and unfinalized estimates below are disabled. Codex main readouts require Agent Speed’s own transport telemetry (request/completion events and measured TTFT); transcript item write time is not a first-token timestamp. Main token readouts use a separate 30-second window ending at the latest valid completed response: per-Agent Σ tokens / Σ decode seconds, then sum and arithmetic mean across those Agents. Idle time holds the last measured result. Existing live/report/chart telemetry retains its measured-only 3-second window. See [measured-rate contract](../docs/fork-measured-rates.md) for full timing rules, paired rings and TTFT placement.
 Window `W = 3000 ms`, interval `[nowMs - W, nowMs]`.
 
 - Measured: for every measured response, `output * overlap(interval, [start', end]) / (end - start')`.

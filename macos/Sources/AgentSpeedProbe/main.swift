@@ -7,6 +7,12 @@ guard let arguments = ProbeArguments.parse(Array(CommandLine.arguments.dropFirst
 }
 
 switch arguments.mode {
+case .telemetry(let seconds):
+    CodexTelemetry.shared.start()
+    for _ in 0..<seconds {
+        try? await Task.sleep(for: .seconds(1))
+        print(CodexTelemetry.shared.status)
+    }
 case .dumpToday:
     DumpToday.run(configuration: arguments.configuration, table: arguments.priceTable(), now: arguments.now)
 case .dumpHistory:

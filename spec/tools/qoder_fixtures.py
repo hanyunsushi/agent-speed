@@ -76,7 +76,7 @@ def agent_view(project, cwd, model, phase, last, responses, in_flight=None, malf
 
 
 def day_totals(responses, measured_models=False):
-    """UTC day totals (METRICS 8): measured = final with a valid interval, its duration widened to 500 ms."""
+    """UTC day totals (METRICS 8): measured = final with a valid interval, using the observed decode interval."""
     days = {}
     for r in responses:
         day = datetime.fromtimestamp(r["endMs"] / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
@@ -86,10 +86,13 @@ def day_totals(responses, measured_models=False):
         for field in ("input", "cachedInput", "cacheWriteInput", "output", "reasoning"):
             row[field] += r[field]
         start, end = r["startMs"], r["endMs"]
-        measured = start is not None and 0 <= end - start <= 15 * 60_000
+        valid = start is not None and 0 < end - start <= 15 * 60_000
+        first = r.get("firstMs")
+        decode_start = first if valid and first is not None and start <= first < end else start
+        measured = valid and r.get("final", True)
         if measured:
             row["measuredOutput"] += r["output"]
-            row["measuredMs"] += max(500, end - start)
+            row["measuredMs"] += end - decode_start
         row["agents"].add(r["agentId"])
         empty = dict(requests=0, output=0, measuredOutput=0, measuredMs=0) if measured_models else dict(requests=0,
                                                                                                        output=0)
@@ -98,7 +101,7 @@ def day_totals(responses, measured_models=False):
         model["output"] += r["output"]
         if measured_models and measured:
             model["measuredOutput"] += r["output"]
-            model["measuredMs"] += max(500, end - start)
+            model["measuredMs"] += end - decode_start
     for row in days.values():
         row["agents"] = len(row["agents"])
     return days

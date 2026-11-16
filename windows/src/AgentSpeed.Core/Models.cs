@@ -302,6 +302,19 @@ public sealed record SpeedSnapshot(
         ? HostSubsetPeaks.TryGetValue(key, out var hostPeak) ? hostPeak : null
         : SubsetPeaks.TryGetValue(key.Sources, out var peak) ? peak : null;
 
+    /// <summary>Arithmetic mean over agents with measured output in this live window; missing/idle agents are excluded.</summary>
+    public Rate AverageLive
+    {
+        get
+        {
+            var contributors = Agents.Where(a => a.Live.Output > 0 && double.IsFinite(a.Live.Output)).ToArray();
+            return contributors.Length == 0 ? Rate.Zero
+                : new Rate(contributors.Average(a => a.Live.Output), contributors.Average(a => a.Live.Total));
+        }
+    }
+
+    public Engine.MeasuredRateWindow IntervalRates { get; init; } = Engine.MeasuredRateWindow.Empty;
+
     public static SpeedSnapshot Empty { get; } = new(
         DateTimeOffset.MinValue,
         MonitorState.Starting(0),

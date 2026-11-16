@@ -50,7 +50,7 @@ public static class AntigravityRules
     {
         ArgumentNullException.ThrowIfNull(executable);
         ArgumentNullException.ThrowIfNull(arguments);
-        var name = Path.GetFileName(executable.Replace('/', '\\'));
+        var name = executable.Replace('\\', '/').Split('/')[^1];
         if (!name.StartsWith("language_server_", StringComparison.OrdinalIgnoreCase))
         {
             return false;

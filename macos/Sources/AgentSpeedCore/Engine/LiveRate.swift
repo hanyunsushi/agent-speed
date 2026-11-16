@@ -167,9 +167,9 @@ struct LiveWindow: Sendable {
         let windowStart = nowMs - SpeedEngine.liveWindowMs
         let seconds = Double(SpeedEngine.liveWindowMs) / 1000
         var measured = Rate.zero
-        var estimated = Rate.zero
+        let estimated = Rate.zero
         var sourceTokens: [SourceKind: Rate] = [:]
-        var estimatedSourceTokens: [SourceKind: Rate] = [:]
+        let estimatedSourceTokens: [SourceKind: Rate] = [:]
         var agentTokens: [String: Rate] = [:]
         // Cost in micro-USD and known output tokens inside the window, before dividing by its length.
         var sourceCost: [SourceKind: LiveCost] = [:]
@@ -211,58 +211,8 @@ struct LiveWindow: Sendable {
             }
         }
 
-        func addEstimate(_ estimate: InFlightEstimate) {
-            estimates.append(estimate)
-            let end = estimate.endMs ?? nowMs
-            let overlap = Double(ResponseTiming.overlap(windowStart, nowMs, estimate.startMs, end)) / 1000
-            guard overlap > 0 else { return }
-            let tokens = Rate(output: estimate.speed.output * overlap, total: estimate.speed.total * overlap)
-            estimated.add(tokens)
-            sourceTokens[estimate.source, default: .zero].add(tokens)
-            estimatedSourceTokens[estimate.source, default: .zero].add(tokens)
-            agentTokens[estimate.agentId, default: .zero].add(tokens)
-            addIntelligence(
-                output: tokens.output, reasoning: tokens.output * estimate.reference.reasoningShare,
-                source: estimate.source, agentId: estimate.agentId, model: estimate.model
-            )
-            if let costRate = estimate.reference.costRate {
-                sourceCost[estimate.source, default: .zero].add(LiveCost(microUsdPerSecond: costRate * overlap, knownOutput: tokens.output))
-            }
-            if tracksCells {
-                let cell = HostSource(host: estimate.host, source: estimate.source)
-                cells.add(tokens, estimated: true, cell: cell)
-                cells.addIntelligence(output: tokens.output, reasoning: tokens.output * estimate.reference.reasoningShare,
-                                      cell: cell)
-                if let costRate = estimate.reference.costRate {
-                    cells.addCost(LiveCost(microUsdPerSecond: costRate * overlap, knownOutput: tokens.output), cell: cell)
-                }
-            }
-        }
-
-        for response in unmeasured {
-            let record = response.record
-            let agent = agents[record.agentId]
-                ?? EngineAgent(id: record.agentId, source: record.source, project: "", model: record.model)
-            guard let reference = references.estimate(for: agent) else { continue }
-            addEstimate(InFlightEstimate(
-                agentId: record.agentId, source: record.source, host: record.host, startMs: response.startMs,
-                endMs: response.endMs, reference: reference,
-                model: LiveModelKey(model: record.model, provider: record.provider)
-            ))
-        }
-
-        for agent in agents.values.sorted(by: { $0.id < $1.id }) {
-            guard agent.phase == .generating,
-                  let inFlightStart = agent.inFlightStartMs,
-                  let lastLine = agent.lastLineMs, nowMs - lastLine <= SpeedEngine.staleMs,
-                  let reference = references.estimate(for: agent)
-            else { continue }
-            let start = max(inFlightStart, latestEnds[agent.id] ?? inFlightStart)
-            addEstimate(InFlightEstimate(
-                agentId: agent.id, source: agent.source, host: agent.host, startMs: start, endMs: nil, reference: reference,
-                model: LiveModelKey(model: agent.model, provider: providers[agent.id])
-            ))
-        }
+        // Only finalized usage with a valid measured interval contributes.
+        // Unfinished requests and missing usage remain unknown; never borrow a historical rate.
 
         func perSecond(_ value: LiveCost) -> LiveCost {
             LiveCost(microUsdPerSecond: value.microUsdPerSecond / seconds, knownOutput: value.knownOutput / seconds)

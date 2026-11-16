@@ -172,7 +172,7 @@ struct HarnessFixtureTests {
         let kimi = try #require(first.days.first { $0.source == .kimi })
         #expect(zcode.totals == output.todayBySource[.zcode])
         #expect(kimi.totals == output.todayBySource[.kimi])
-        #expect(zcode.measuredMs == 11_000 && kimi.measuredMs == 14_200)
+        #expect(zcode.measuredMs == 10_800 && kimi.measuredMs == 14_200)
         let grok = try #require(first.days.first { $0.source == .grokBuild })
         #expect(grok.totals == output.todayBySource[.grokBuild] && grok.measuredMs == 11_000)
     }

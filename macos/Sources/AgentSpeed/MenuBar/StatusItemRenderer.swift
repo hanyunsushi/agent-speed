@@ -27,7 +27,7 @@ final class StatusItemRenderer {
             let gauge = self.model.gauge
             let settings = self.model.settings
             _ = (gauge.revision, gauge.tier, gauge.readoutValue)
-            _ = model.snapshot.lastResponse?.ttftMs
+            _ = model.snapshot.intervalRates
             _ = (settings.barMode, settings.barShowsUnit, settings.barColoredGlyph, settings.effects)
             _ = (self.model.l10n.language, self.model.accessibility.increaseContrast, self.model.accessibility.reduceMotion)
             _ = settings.barSecondary
@@ -35,6 +35,7 @@ final class StatusItemRenderer {
                 // The money value follows the snapshot, the currency, the rates and the marks (DESIGN 9).
                 _ = (self.model.snapshot.sources, self.model.cost.currency, self.model.cost.rate, settings.billableSources)
             }
+            _ = (self.model.subscriptionBalances.showsMenuBar, self.model.subscriptionBalances.menuBarTitle)
             _ = settings.liveUnit
             _ = (settings.trafficEnabled, settings.barTraffic, settings.trafficUnit, settings.barIntelligence)
             if settings.trafficEnabled, settings.barTraffic.isNetwork {
@@ -88,7 +89,7 @@ final class StatusItemRenderer {
     }
 
     /// The current state, with the value's room decided by the width governor.
-    private func state(at time: TimeInterval) -> StatusItemState {
+    func state(at time: TimeInterval) -> StatusItemState {
         let needed = StatusItemLayout.valueWidth(of: StatusItemValue.current(model).text)
         _ = widthGovernor.update(needed: needed, now: time)
         _ = secondaryGovernor.update(needed: StatusItemSecondary(model: model)?.numberWidth ?? 0, now: time)

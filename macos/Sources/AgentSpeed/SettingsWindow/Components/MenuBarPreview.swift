@@ -22,7 +22,10 @@ struct MenuBarPreview: View {
             PreviewWallpaper(dark: dark)
             HStack(spacing: 14) {
                 Spacer(minLength: 0)
-                StatusItemSample(
+                if settings.liveUnit == .tokens {
+                    tokenSample(value: value, dark: dark)
+                } else {
+                    StatusItemSample(
                     mode: settings.barMode,
                     colored: settings.barColoredGlyph,
                     showsUnit: settings.barShowsUnit,
@@ -30,7 +33,8 @@ struct MenuBarPreview: View {
                     heat: HeatPalette.heat(value: value, redline: settings.redline),
                     unit: model.l10n("unit.tokS"),
                     dark: dark
-                )
+                    )
+                }
                 Group {
                     Image(systemName: "wifi")
                     Image(systemName: "battery.75percent")
@@ -55,6 +59,19 @@ struct MenuBarPreview: View {
         }
         .padding(.vertical, Spacing.xxs)
         .accessibilityHidden(true)
+    }
+
+    /// Use the actual paired-ring painter so the settings preview follows all three display modes.
+    private func tokenSample(value: Double, dark: Bool) -> some View {
+        var state = StatusItemState(model: model, time: Clock.now)
+        state.value = SpeedFormat.speed(value)
+        state.averageValue = SpeedFormat.speed(value / 2)
+        state.ring = .init(fraction: Self.sampleFraction, fillOpacity: 1, glow: 0)
+        state.averageRing = .init(fraction: Self.sampleFraction / 2, fillOpacity: 1, glow: 0)
+        return Image(nsImage: StatusItemArtist.image(for: state))
+            .padding(.horizontal, 6)
+            .frame(height: 22)
+            .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 
     private func barBackground(dark: Bool) -> some View {

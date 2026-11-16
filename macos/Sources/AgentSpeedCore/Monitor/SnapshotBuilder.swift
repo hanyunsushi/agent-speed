@@ -160,6 +160,7 @@ enum SnapshotBuilder {
         if !context.remote.hosts.isEmpty {
             (snapshot.hosts, snapshot.hostSources) = hosts(output, context: context)
         }
+        snapshot.intervalRates = output.intervalRates
         snapshot.codexQuota = context.codexQuota
         return snapshot
     }

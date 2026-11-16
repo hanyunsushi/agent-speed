@@ -74,7 +74,7 @@ public sealed class RemoteIngestTests
         using var harness = new IngestHarness();
         harness.Send(L.Seeding(L.A, 3, SeedingLines(generating: true)));
         var (before, _) = harness.Sink.Establish();
-        Assert.True(before.Sources.First(s => s.Kind == SourceKind.Codex).LiveEstimated.Output > 0, "the in-flight estimate runs while connected");
+        Assert.Equal(0, before.Sources.First(s => s.Kind == SourceKind.Codex).LiveEstimated.Output);
         harness.Send([L.Status(L.A, 3, RemoteStatus.Unreachable)]);
         var agent = harness.EngineAgents[L.AgentId(L.A, "a")];
         Assert.Equal(AgentPhase.Idle, agent.Phase);

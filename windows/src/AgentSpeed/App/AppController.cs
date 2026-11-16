@@ -40,6 +40,18 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 {
     private const double HeroDiameter = 112;
 
+    private Subscriptions.SubscriptionBalanceService? _subscriptionBalances;
+    private Subscriptions.SubscriptionBalanceWindow? _subscriptionBalanceWindow;
+    public void OpenSubscriptionBalances()
+    {
+        if (_subscriptionBalances is null) return;
+        if (_subscriptionBalanceWindow is null) {
+            _subscriptionBalanceWindow = new(_subscriptionBalances);
+            _subscriptionBalanceWindow.Closed += (_, _) => _subscriptionBalanceWindow = null;
+        }
+        _subscriptionBalanceWindow.Show(); _subscriptionBalanceWindow.Activate();
+    }
+
     private readonly App _app;
     private readonly SingleInstance _instance;
     private readonly LaunchArguments _launch;
@@ -110,6 +122,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
     public void Start()
     {
+        AgentSpeed.Core.Telemetry.CodexTelemetry.Shared.Start();
         _ui = Dispatcher.CurrentDispatcher;
         var phases = new StartupPhases();
         Orb.Gpu.ShaderLibrary.Preload();
@@ -234,6 +247,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         StartBoards();
         _titles.Changed += (_, _) => OnTitlesChanged();
         phases.Mark("orb");
+        _subscriptionBalances = new Subscriptions.SubscriptionBalanceService(_ui);
+        _subscriptionBalances.Changed += UpdateTaskbar;
         UpdateTaskbar();
         StartMonitor();
         StartQuota();
@@ -540,6 +555,8 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         }
 
         _disposed = true;
+        Try(() => _subscriptionBalanceWindow?.Close());
+        Try(() => _subscriptionBalances?.Dispose());
         Try(() => _historyStartFallback?.Stop());
         Try(() => _history?.Dispose());
         Try(() => _historyService?.Dispose());
@@ -824,11 +841,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
         var title = _titles.Text(_speed.Title, _titles.General);
         var money = LiveMoney();
         var bar = money is null ? ((string?)null, _loc["unit.tokS"]) : CostDisplay.BarValue(money, s.BarShowUnit);
-        if (money is null && _speed.Snapshot.LastResponse?.TtftMs is { } valueTtft)
-        {
-            bar = (bar.Item1, $"{bar.Item2}  {FormatTtft(valueTtft)}");
-        }
-        var accessible = money is null ? DisplayText.Accessibility(_speed.Value, title, _loc) : _cost.Display.LiveAccessibility(money, title);
+        var accessible = money is null ? DisplayText.Accessibility(_speed.Snapshot.IntervalRates.Total.Output, title, _loc) : _cost.Display.LiveAccessibility(money, title);
         if (money is null && _speed.Snapshot.LastResponse?.TtftMs is { } ttft)
         {
             accessible += $" · TTFT {FormatTtft(ttft)}";
@@ -846,7 +859,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
 
         _lastTaskbarState = new TaskbarState(
             s.ShowOnTaskbar,
-            _speed.Value,
+            money is null ? _speed.Snapshot.IntervalRates.Total.Output : _speed.Value,
             _speed.Tier,
             _speed.Redline,
             s.BarMode,
@@ -862,7 +875,10 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             secondary,
             traffic,
             intelligence,
-            s.TaskbarOffset);
+            s.TaskbarOffset,
+            money is null ? _speed.Snapshot.IntervalRates.Average.Output : null,
+            _speed.Snapshot.IntervalRates.SampleCount > 0,
+            _subscriptionBalances is { ShowOnTaskbar: true } balances ? balances.Title : null);
         _taskbar.Update(_lastTaskbarState);
     }
 
@@ -902,6 +918,7 @@ internal sealed partial class AppController : IAppCommands, IOrbHost, IDisposabl
             ? $"{money.NumberText} {money.Unit}"
             : $"{SpeedFormat.Speed(_speed.Value)} {_loc["unit.tokS"]} {(_speed.Snapshot.LastResponse?.TtftMs is { } ttft ? FormatTtft(ttft) : string.Empty)}".TrimEnd();
         var line = BarSecondaryValue() is { } secondary ? $"{main} · {secondary.Spoken} · {title}" : $"{main} · {title}";
+        line += $" · 30s Σ {SpeedFormat.Speed(_speed.Snapshot.IntervalRates.Total.Output)} / Avg {SpeedFormat.Speed(_speed.Snapshot.IntervalRates.Average.Output)} tok/s";
         return BarReadouts.Append(line, " · ", BarTrafficBlock.From(Settings, _traffic.Snapshot, _loc), BarIntelligence());
     }
 

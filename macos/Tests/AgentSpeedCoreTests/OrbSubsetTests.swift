@@ -158,7 +158,7 @@ struct OrbSubsetTests {
         let claude = SourceSet(.claudeCode)
         let both = codex.union(claude)
         let output = engine.advance(nowMs: Self.base, todayStartMs: Self.today, emitsEvents: false, subsets: [codex, claude, both])
-        #expect(output.sourceLiveEstimated[.codex]?.output == 100)
+        #expect((output.sourceLiveEstimated[.codex]?.output ?? 0) == 0)
         #expect(output.sourceLiveEstimated[.claudeCode] == nil)
         #expect(Set(output.subsetPeaks.keys) == Set([codex, claude, both].map { SubsetKey($0) }))
         #expect(abs((output.subsetPeaks[codex] ?? 0) - 100) < 1e-4)
@@ -169,15 +169,15 @@ struct OrbSubsetTests {
         #expect(snapshot.dayStart == Date(timeIntervalSince1970: TimeInterval(Self.today) / 1000))
         #expect(snapshot.subsetPeaks == output.subsetPeaks)
         let codexReading = OrbSubset.reading(snapshot, sources: codex)
-        #expect(codexReading.live.output == 100)
-        #expect(codexReading.estimatedShare == 1)
+        #expect(codexReading.live.output == 0)
+        #expect(codexReading.estimatedShare == 0)
         #expect(codexReading.generatingSources == [.codex])
         #expect(OrbSubset.reading(snapshot, sources: claude).estimatedShare == 0)
         #expect(OrbSubset.reading(snapshot, sources: claude).generatingSources.isEmpty)
         let pair = OrbSubset.reading(snapshot, sources: both)
         #expect(abs(pair.live.output - output.live.output) < 1e-9)
         #expect(abs(pair.estimatedShare - output.liveEstimatedShare) < 1e-12)
-        #expect(abs(pair.estimatedShare - 0.5) < 1e-12)
+        #expect(pair.estimatedShare == 0)
     }
 
     @Test func emptyLedgerReportsZeroPeaks() {

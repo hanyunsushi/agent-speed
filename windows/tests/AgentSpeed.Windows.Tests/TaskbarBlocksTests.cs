@@ -5,6 +5,9 @@ using AgentSpeed.Presentation.Localization;
 using AgentSpeed.Core.Perf;
 using AgentSpeed.Presentation.Perf;
 using AgentSpeed.Taskbar;
+using AgentSpeed.Presentation.Settings;
+using AgentSpeed.Presentation.Orb;
+using System.Runtime.InteropServices;
 
 namespace AgentSpeed.Windows.Tests;
 
@@ -53,6 +56,33 @@ public class TaskbarBlocksTests
         Assert.True(network > plain && intelligence > plain);
         Assert.InRange(both - plain, network - plain + intelligence - plain - 1, network - plain + intelligence - plain + 1);
         Assert.All(others, length => Assert.Equal(both, length));
+    }
+
+    [Fact]
+    public void PairedTokenModesRenderDistinctlyAndBalancesReserveTheirOwnSpace()
+    {
+        OnStaThread(() =>
+        {
+            var renderer = new TaskbarRenderer();
+            var baseline = TaskbarState.Initial with { Enabled = true, Value = 180, AverageValue = 90, TokensMeasured = true };
+            var pictures = new List<byte[]>();
+            foreach (var mode in new[] { BarDisplayMode.GlyphAndValue, BarDisplayMode.GlyphOnly, BarDisplayMode.ValueOnly })
+            {
+                var state = baseline with { Mode = mode };
+                var width = renderer.MeasureLength(state, 1, false);
+                var buffer = Marshal.AllocHGlobal(width * 40 * 4);
+                try {
+                    renderer.Render(state, new BarScene(), width, 40, 1, false, false, false, buffer, width * 40 * 4);
+                    var bytes = new byte[width * 40 * 4]; Marshal.Copy(buffer, bytes, 0, bytes.Length); pictures.Add(bytes);
+                } finally { Marshal.FreeHGlobal(buffer); }
+            }
+            Assert.False(pictures[0].SequenceEqual(pictures[1]));
+            Assert.False(pictures[0].SequenceEqual(pictures[2]));
+            Assert.False(pictures[1].SequenceEqual(pictures[2]));
+            Assert.True(renderer.MeasureLength(baseline with { BalanceText = "Provider $20" }, 1, false) > renderer.MeasureLength(baseline, 1, false));
+            Assert.True(renderer.MeasureLength(baseline with { BalanceText = "Provider $20" }, 1, true) > renderer.MeasureLength(baseline, 1, true));
+            return true;
+        });
     }
 
     private static T OnStaThread<T>(Func<T> work)

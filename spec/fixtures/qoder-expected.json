@@ -394,7 +394,7 @@
      "output": 1821,
      "reasoning": 0,
      "measuredOutput": 1414,
-     "measuredMs": 128015,
+     "measuredMs": 127765,
      "agents": 6,
      "models": {
       "auto": {
@@ -828,7 +828,7 @@
      "output": 2061,
      "reasoning": 0,
      "measuredOutput": 1654,
-     "measuredMs": 135515,
+     "measuredMs": 135265,
      "agents": 8,
      "models": {
       "auto": {

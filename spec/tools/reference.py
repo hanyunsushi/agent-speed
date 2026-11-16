@@ -3396,8 +3396,6 @@ def estimated_speed(valid, now, agent):
 def live_rate(responses, agents, now):
     w0 = now - WINDOW_MS
     valid = [r for r in responses if interval(r) is not None and is_final(r)]
-    unmeasured = [r for r in responses if interval(r) is not None and not is_final(r)]
-    by_id = {a["id"]: a for a in agents}
     measured = [0.0, 0.0]
     for r in valid:
         s, e = interval(r)
@@ -3405,28 +3403,6 @@ def live_rate(responses, agents, now):
         measured[0] += r["output"] * frac
         measured[1] += (r["output"] + r["input"]) * frac
     estimated = [0.0, 0.0]
-    for r in unmeasured:
-        agent = by_id.get(r["agentId"], {"id": r["agentId"], "model": r.get("model"), "source": r["source"]})
-        sp = estimated_speed(valid, now, agent)
-        if sp is None:
-            continue
-        s, e = interval(r)
-        secs = overlap(w0, now, s, e) / 1000
-        estimated[0] += sp[0] * secs
-        estimated[1] += sp[1] * secs
-    for a in agents:
-        if a["phase"] != "generating" or a.get("inFlightStartMs") is None or a.get("lastLineMs") is None:
-            continue
-        if now - a["lastLineMs"] > 300_000:
-            continue
-        sp = estimated_speed(valid, now, a)
-        if sp is None:
-            continue
-        own_ends = [r["endMs"] for r in responses if r["agentId"] == a["id"]]
-        start = max([a["inFlightStartMs"]] + own_ends)
-        secs = overlap(w0, now, start, now) / 1000
-        estimated[0] += sp[0] * secs
-        estimated[1] += sp[1] * secs
     out = (measured[0] + estimated[0]) / (WINDOW_MS / 1000)
     tot = (measured[1] + estimated[1]) / (WINDOW_MS / 1000)
     denom = measured[0] + estimated[0]
@@ -3452,8 +3428,6 @@ def live_cost(responses, agents, now):
     """(live cost in micro-USD per second, share of live output tokens whose cost is known) - METRICS 9.5."""
     w0 = now - WINDOW_MS
     valid = [r for r in responses if interval(r) is not None and is_final(r)]
-    unmeasured = [r for r in responses if interval(r) is not None and not is_final(r)]
-    by_id = {a["id"]: a for a in agents}
     cost = known_tokens = all_tokens = 0.0
     for r in valid:
         s, e = interval(r)
@@ -3462,28 +3436,6 @@ def live_cost(responses, agents, now):
         if r.get("costMicroUsd") is not None:
             cost += r["costMicroUsd"] * frac
             known_tokens += r["output"] * frac
-    estimates = []
-    for r in unmeasured:
-        agent = by_id.get(r["agentId"], {"id": r["agentId"], "model": r.get("model"), "source": r["source"]})
-        s, e = interval(r)
-        estimates.append((agent, overlap(w0, now, s, e) / 1000))
-    for a in agents:
-        if a["phase"] != "generating" or a.get("inFlightStartMs") is None or a.get("lastLineMs") is None:
-            continue
-        if now - a["lastLineMs"] > 300_000:
-            continue
-        start = max([a["inFlightStartMs"]] + [r["endMs"] for r in responses if r["agentId"] == a["id"]])
-        estimates.append((a, overlap(w0, now, start, now) / 1000))
-    for agent, secs in estimates:
-        refs = reference_set(valid, now, agent)
-        if not refs:
-            continue
-        tokens = speed_of(refs)[0] * secs
-        all_tokens += tokens
-        rate = cost_rate(refs)
-        if rate is not None:
-            cost += rate * secs
-            known_tokens += tokens
     return cost / (WINDOW_MS / 1000), (known_tokens / all_tokens if all_tokens > 0 else 1.0)
 
 
