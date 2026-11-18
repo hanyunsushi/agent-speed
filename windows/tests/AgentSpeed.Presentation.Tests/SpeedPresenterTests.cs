@@ -1,4 +1,5 @@
 using AgentSpeed.Core;
+using AgentSpeed.Core.Engine;
 using AgentSpeed.Presentation.Heat;
 
 namespace AgentSpeed.Presentation.Tests;
@@ -7,6 +8,10 @@ public class SpeedPresenterTests
 {
     private static SpeedSnapshot WithLive(double output, double total) =>
         SpeedSnapshot.Empty with { Live = new Rate(output, total) };
+
+    private static SpeedSnapshot WithMeasured(double output, double total) =>
+        WithLive(0, 0) with { IntervalRates = new MeasuredRateWindow(1000, 1,
+            new Dictionary<string, Rate> { ["agent"] = new(output, total) }) };
 
     [Fact]
     public void DefaultsToOutputMetricAndDefaultRedline()
@@ -33,6 +38,16 @@ public class SpeedPresenterTests
         presenter.Update(WithLive(120, 900_000), 0.2);
         Assert.Equal(1, presenter.Heat);
         Assert.Equal(1, presenter.Overdrive);
+    }
+
+    [Fact]
+    public void MeasuredWindowDrivesStatusWhenLiveFallsIdle()
+    {
+        var presenter = new SpeedPresenter();
+        presenter.Update(WithMeasured(120, 900), 0);
+        Assert.Equal(120, presenter.Value);
+        presenter.Configure(SpeedMetric.Total, 400, 0.1);
+        Assert.Equal(900, presenter.Value);
     }
 
     [Fact]

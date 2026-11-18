@@ -315,6 +315,10 @@ public sealed record SpeedSnapshot(
 
     public Engine.MeasuredRateWindow IntervalRates { get; init; } = Engine.MeasuredRateWindow.Empty;
 
+    /// The rate that drives the shared speed state. A measured 30-second window wins over the
+    /// instantaneous live estimate, including during replay/backtest idle gaps.
+    public Rate StatusRate => IntervalRates.SampleCount > 0 ? IntervalRates.Total : Live;
+
     public static SpeedSnapshot Empty { get; } = new(
         DateTimeOffset.MinValue,
         MonitorState.Starting(0),

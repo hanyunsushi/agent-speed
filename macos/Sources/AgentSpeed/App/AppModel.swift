@@ -172,7 +172,7 @@ final class AppModel {
             guard let self else { return }
             self.gauge.redline = self.settings.redline
             let snapshot = self.store.snapshot
-            self.gauge.ingest(self.value(of: snapshot.live), now: Clock.now)
+            self.gauge.ingest(self.value(of: snapshot.statusRate), now: Clock.now)
         })
         loops.append(ObservationLoop { [weak self] in
             guard let self else { return }

@@ -70,4 +70,16 @@ struct MeasuredRateWindowTests {
         #expect(idle.intervalRates == corrected)
     }
 
+    @Test func measuredWindowDrivesSharedStatusDuringReplayIdleGap() {
+        var snapshot = SpeedSnapshot.empty
+        snapshot.live = Rate(output: 0, total: 0)
+        snapshot.intervalRates = MeasuredRateWindow(endedAtMs: now, sampleCount: 2,
+                                                     byAgent: ["a": Rate(output: 120, total: 120)])
+        #expect(snapshot.statusRate == snapshot.intervalRates.total)
+
+        snapshot.intervalRates = .empty
+        snapshot.live = Rate(output: 17, total: 34)
+        #expect(snapshot.statusRate == snapshot.live)
+    }
+
 }

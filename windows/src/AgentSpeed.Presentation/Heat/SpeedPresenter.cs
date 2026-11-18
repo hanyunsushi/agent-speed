@@ -23,7 +23,7 @@ public sealed class SpeedPresenter
 
     public SpeedSnapshot Snapshot { get; private set; } = SpeedSnapshot.Empty;
 
-    public double Value => Sanitize(Snapshot.Live.ValueFor(Metric));
+    public double Value => Sanitize(Snapshot.StatusRate.ValueFor(Metric));
 
     /// <summary>Effect tier: drives the effects, never shown as text.</summary>
     public SpeedTier Tier => _tracker.Displayed;
