@@ -9,8 +9,8 @@ public class SpeedPresenterTests
     private static SpeedSnapshot WithLive(double output, double total) =>
         SpeedSnapshot.Empty with { Live = new Rate(output, total) };
 
-    private static SpeedSnapshot WithMeasured(double output, double total) =>
-        WithLive(0, 0) with { IntervalRates = new MeasuredRateWindow(1000, 1,
+    private static SpeedSnapshot WithMeasured(double output, double total, long timestamp = 1000) =>
+        WithLive(0, 0) with { Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(timestamp), IntervalRates = new MeasuredRateWindow(1000, 1,
             new Dictionary<string, Rate> { ["agent"] = new(output, total) }) };
 
     [Fact]
@@ -48,6 +48,14 @@ public class SpeedPresenterTests
         Assert.Equal(120, presenter.Value);
         presenter.Configure(SpeedMetric.Total, 400, 0.1);
         Assert.Equal(900, presenter.Value);
+    }
+
+    [Fact]
+    public void FullyIdleStatusReturnsToLiveZeroAfterMeasuredWindow()
+    {
+        var presenter = new SpeedPresenter();
+        presenter.Update(WithMeasured(120, 900, timestamp: 31_001), 0);
+        Assert.Equal(0, presenter.Value);
     }
 
     [Fact]

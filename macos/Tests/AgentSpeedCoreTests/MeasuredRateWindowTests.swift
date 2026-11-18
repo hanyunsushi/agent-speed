@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import AgentSpeedCore
 
@@ -73,9 +74,13 @@ struct MeasuredRateWindowTests {
     @Test func measuredWindowDrivesSharedStatusDuringReplayIdleGap() {
         var snapshot = SpeedSnapshot.empty
         snapshot.live = Rate(output: 0, total: 0)
+        snapshot.timestamp = Date(timeIntervalSince1970: TimeInterval(now) / 1000)
         snapshot.intervalRates = MeasuredRateWindow(endedAtMs: now, sampleCount: 2,
                                                      byAgent: ["a": Rate(output: 120, total: 120)])
         #expect(snapshot.statusRate == snapshot.intervalRates.total)
+
+        snapshot.timestamp = Date(timeIntervalSince1970: TimeInterval(now + MeasuredRateWindow.durationMs + 1) / 1000)
+        #expect(snapshot.statusRate == snapshot.live)
 
         snapshot.intervalRates = .empty
         snapshot.live = Rate(output: 17, total: 34)

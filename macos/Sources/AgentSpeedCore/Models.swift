@@ -320,9 +320,15 @@ public enum MonitorWarning: Equatable, Sendable {
 public struct SpeedSnapshot: Equatable, Sendable {
     public var intervalRates = MeasuredRateWindow.empty
     /// The rate that drives the shared speed state. A measured 30-second window wins over the
-    /// instantaneous live estimate, including during replay/backtest idle gaps.
+    /// instantaneous live estimate while it is still current. After a full measured-window
+    /// idle gap, the live zero is allowed to put the status back into standby.
     public var statusRate: Rate {
-        intervalRates.sampleCount > 0 ? intervalRates.total : live
+        guard intervalRates.sampleCount > 0 else { return live }
+        guard let endedAtMs = intervalRates.endedAtMs,
+              timestamp != .distantPast,
+              timestamp != .distantFuture else { return intervalRates.total }
+        let nowMs = Int64((timestamp.timeIntervalSince1970 * 1000).rounded())
+        return nowMs - endedAtMs <= MeasuredRateWindow.durationMs ? intervalRates.total : live
     }
     /// Arithmetic mean of agents with positive measured output in the current live window.
     /// Idle/missing-data agents do not dilute the denominator; no measured output means zero.
